@@ -138,6 +138,7 @@
   .fee-box{margin-top:20px; padding:20px; border-radius:14px; background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.25); display:flex; justify-content:space-between; align-items:center;}
   .fee-box .label{font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.06em;}
   .fee-box .total{font-family:var(--head); font-size:26px; font-weight:800; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .fee-box .fee-breakdown{font-size:11.5px; color:var(--muted); margin-top:4px;}
   .config-note{font-size:12px; color:var(--warn); background:rgba(255,184,77,0.08); border:1px solid rgba(255,184,77,0.25); border-radius:10px; padding:12px 14px; margin:18px 0;}
 
   .qr-box{display:flex; gap:18px; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-brd); border-radius:14px; padding:18px; margin:18px 0;}
@@ -200,7 +201,7 @@
 <header>
   <div class="nav">
     <div class="brand"><span class="mark">◆</span> Launch Console</div>
-    <div class="navlinks"><a href="#build">Create Token</a><a href="https://raydium.io/liquidity/create/" target="_blank" rel="noopener">Add Liquidity</a></div>
+    <div class="navlinks"><a href="#build">Create Token</a></div>
     <button id="walletBtn">Connect Wallet</button>
   </div>
 </header>
@@ -322,6 +323,24 @@
             <div><label for="sTwitter">X / Twitter</label><input type="url" id="sTwitter" placeholder="https://x.com/..."></div>
           </div>
         </div>
+
+        <label style="margin-top:20px;">Liquidity</label>
+        <label class="feat" id="item-addLiquidity">
+          <input type="checkbox" id="cb-addLiquidity">
+          <span class="swatch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span style="flex:1;">
+            <span class="feat-title">Add Initial Liquidity</span>
+            <span class="feat-desc">Right after minting, create a Raydium pool and seed it with your token + SOL — signed as the next transaction in this same launch, before you ever leave the page. Added to the total below.</span>
+          </span>
+        </label>
+        <div id="liqFields" style="display:none; margin-top:4px;">
+          <div class="grid2">
+            <div><label for="liqTokenAmt">Token amount to deposit</label><input type="number" id="liqTokenAmt" placeholder="e.g. 200000000" min="0"></div>
+            <div><label for="liqSolAmt">SOL amount to deposit</label><input type="number" id="liqSolAmt" placeholder="e.g. 2" min="0" step="0.01"></div>
+          </div>
+          <div class="hint">Sets the starting price as SOL ÷ tokens. This SOL and these tokens come straight out of your connected wallet into the pool — they're not sent to the platform fee wallet.</div>
+        </div>
+
         <label for="tImageUrl">Hosted Image URL (optional, for real metadata)</label>
         <input type="url" id="tImageUrl" placeholder="https://...">
 
@@ -343,24 +362,12 @@
         <div class="review-row"><span class="k">Security features</span><span class="v" id="rvFeatures">none</span></div>
         <div class="review-row"><span class="k">Initial liquidity</span><span class="v" id="rvLiquidity">skipped</span></div>
 
-        <label class="feat" id="item-addLiquidity" style="margin-top:18px;">
-          <input type="checkbox" id="cb-addLiquidity">
-          <span class="swatch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <span style="flex:1;">
-            <span class="feat-title">Add Initial Liquidity</span>
-            <span class="feat-desc">Right after minting, create a Raydium pool and seed it with your token + SOL — signed as the next transaction in this same launch, before you ever leave the page.</span>
-          </span>
-        </label>
-        <div id="liqFields" style="display:none; margin-top:4px;">
-          <div class="grid2">
-            <div><label for="liqTokenAmt">Token amount to deposit</label><input type="number" id="liqTokenAmt" placeholder="e.g. 200000000" min="0"></div>
-            <div><label for="liqSolAmt">SOL amount to deposit</label><input type="number" id="liqSolAmt" placeholder="e.g. 2" min="0" step="0.01"></div>
-          </div>
-          <div class="hint">Sets the starting price as SOL ÷ tokens. You'll need that much SOL and that many tokens already in the connected wallet — on top of the deploy fee above — plus roughly 0.15–0.2 extra SOL for pool-creation rent and fees.</div>
-        </div>
-
         <div class="fee-box">
-          <div><div class="label">Total deploy fee</div><div class="total" id="feeTotal">0.10 SOL</div></div>
+          <div>
+            <div class="label">Total SOL needed to deploy</div>
+            <div class="total" id="feeTotal">0.10 SOL</div>
+            <div class="fee-breakdown" id="feeBreakdown" style="display:none;"></div>
+          </div>
         </div>
 
         <div class="qr-box" id="qrBox">
@@ -551,11 +558,31 @@ $('cb-addLiquidity').addEventListener('change', () => {
   $('liqFields').style.display = on ? 'block' : 'none';
   syncReview();
 });
+['liqTokenAmt','liqSolAmt'].forEach(id => $(id).addEventListener('input', syncReview));
+
+// Returns the platform fee only (base + selected security features) — this is
+// the amount actually transferred to PLATFORM_WALLET_ADDRESS in the fee-payment
+// transaction. The displayed total below also folds in the initial-liquidity
+// SOL amount so the user sees one combined "SOL needed" figure, but that
+// liquidity SOL is never sent to the platform — it goes straight into the
+// Raydium pool from the user's own wallet in a separate transaction.
 function updateFee(){
-  let total = BASE_FEE_SOL;
-  featureIds.forEach(id => { if($('cb-' + id).checked) total += FEATURE_FEES[id]; });
-  $('feeTotal').textContent = total.toFixed(3) + ' SOL';
-  return total;
+  let platformFee = BASE_FEE_SOL;
+  featureIds.forEach(id => { if($('cb-' + id).checked) platformFee += FEATURE_FEES[id]; });
+
+  const liq = $('cb-addLiquidity').checked ? (parseFloat($('liqSolAmt').value) || 0) : 0;
+  const grandTotal = platformFee + liq;
+  $('feeTotal').textContent = grandTotal.toFixed(3) + ' SOL';
+
+  const bd = $('feeBreakdown');
+  if(liq > 0){
+    bd.style.display = 'block';
+    bd.textContent = `${platformFee.toFixed(3)} SOL platform fee + ${liq.toFixed(3)} SOL initial liquidity (goes into the pool, not the platform wallet)`;
+  } else {
+    bd.style.display = 'none';
+    bd.textContent = '';
+  }
+  return platformFee;
 }
 updateFee();
 
