@@ -119,11 +119,7 @@
   .feat-title .fee{color:var(--warn); font-weight:500; font-size:12px; font-family:var(--mono);}
   .feat-desc{color:var(--muted); font-size:12.5px; margin-top:4px;}
 
-  .network-toggle{display:flex; gap:8px; margin-bottom:8px;}
-  .net-btn{font-size:12.5px; font-weight:600; padding:9px 16px; border-radius:9px; border:1px solid var(--glass-brd); background:rgba(255,255,255,0.03); color:var(--muted); cursor:pointer;}
-  .net-btn.active{border-color:var(--violet); color:#fff; background:rgba(139,92,246,0.15);}
-  .net-warn{font-size:12.5px; color:var(--warn); margin:10px 0 20px; display:none;}
-  .net-warn.show{display:block;}
+  .net-warn{font-size:12.5px; color:var(--warn); margin:10px 0 20px; display:block;}
 
   .step-actions{display:flex; justify-content:space-between; margin-top:28px; gap:12px;}
   .btn{font-family:var(--body); font-weight:600; font-size:14px; padding:12px 22px; border-radius:10px; cursor:pointer; border:none;}
@@ -185,7 +181,7 @@
 </head>
 <body>
 
-<div class="banner">Testnet mode is on by default — practice a full launch with free devnet SOL before you spend anything real.</div>
+<div class="banner">Live on Solana Mainnet — every deploy here is real and irreversible.</div>
 
 <header>
   <div class="nav">
@@ -260,12 +256,7 @@
         <h2>Advanced Settings</h2>
         <p class="desc">Every toggle here changes a real on-chain authority — not cosmetic.</p>
 
-        <label>Network</label>
-        <div class="network-toggle">
-          <button class="net-btn active" id="btnDevnet">Devnet (test)</button>
-          <button class="net-btn" id="btnMainnet">Mainnet (real)</button>
-        </div>
-        <div class="net-warn" id="mainnetWarn">⚠ Mainnet selected — real SOL, real and irreversible deployment.</div>
+        <div class="net-warn show">⚠ This deploys to Solana Mainnet — real SOL, real and irreversible.</div>
 
         <label style="margin-top:8px;">Security Features</label>
         <label class="feat" id="item-revokeMint">
@@ -408,7 +399,7 @@ const FEATURE_FEES = { revokeMint: 0.05, revokeFreeze: 0.05, immutable: 0.03, so
 const RPC_ENDPOINTS = { "devnet": web3.clusterApiUrl("devnet"), "mainnet-beta": web3.clusterApiUrl("mainnet-beta") };
 /* =========================================================== */
 
-let network = "devnet";
+let network = "mainnet-beta";
 let connection = new web3.Connection(RPC_ENDPOINTS[network], "confirmed");
 let walletPubkey = null;
 let currentStep = 1;
@@ -483,20 +474,9 @@ function handleIcon(file){
   reader.readAsDataURL(file);
 }
 
-$('btnDevnet').onclick = () => setNetwork('devnet');
-$('btnMainnet').onclick = () => setNetwork('mainnet-beta');
-function setNetwork(net){
-  network = net;
-  connection = new web3.Connection(RPC_ENDPOINTS[net], "confirmed");
-  $('btnDevnet').classList.toggle('active', net==='devnet');
-  $('btnMainnet').classList.toggle('active', net==='mainnet-beta');
-  $('mainnetWarn').classList.toggle('show', net==='mainnet-beta');
-}
-
 const featureIds = ['revokeMint','revokeFreeze','immutable','social'];
 featureIds.forEach(id => {
-  const item = $('item-' + id), cb = $('cb-' + id);
-  item.addEventListener('click', e => { if(e.target.tagName !== 'INPUT'){ cb.checked = !cb.checked; } onFeatureChange(); });
+  $('cb-' + id).addEventListener('change', onFeatureChange);
 });
 function onFeatureChange(){
   featureIds.forEach(id => $('item-' + id).classList.toggle('on', $('cb-' + id).checked));
