@@ -177,6 +177,20 @@
 
   footer{padding:32px 0 60px; color:var(--muted); font-size:12.5px; text-align:center; border-top:1px solid var(--line); margin-top:40px;}
   footer a{color:var(--muted); border-bottom:1px dotted var(--muted);}
+
+  .ai-box{border:1px solid rgba(139,92,246,0.28); background:rgba(139,92,246,0.06); border-radius:14px; padding:18px 20px; margin-bottom:24px;}
+  .ai-box label{color:var(--text); font-size:13.5px;}
+  .ai-box textarea{margin-bottom:12px; min-height:56px;}
+  .ai-actions{display:flex; gap:10px; flex-wrap:wrap;}
+  .ai-actions .btn{padding:9px 16px; font-size:13px;}
+  .ai-status{font-size:12px; color:var(--muted); margin-top:10px; min-height:14px;}
+  .ai-status.err{color:var(--danger);}
+  .ai-status.ok{color:var(--ok);}
+
+  .liq-section{margin-top:22px; padding-top:20px; border-top:1px solid rgba(53,227,154,0.25);}
+  .liq-section h4{font-family:var(--head); font-size:15.5px; margin:0 0 6px;}
+  .liq-section .desc{color:var(--muted); font-size:12.5px; margin-bottom:16px;}
+  .liq-section .hint{margin-top:-10px;}
 </style>
 </head>
 <body>
@@ -214,6 +228,16 @@
       <div class="panel-step active" id="panel-1">
         <h2>Token Info</h2>
         <p class="desc">The basics — this is what holders will see everywhere your token shows up.</p>
+
+        <div class="ai-box">
+          <label for="aiPrompt">✨ Not sure what to call it? Describe the idea</label>
+          <textarea id="aiPrompt" placeholder="e.g. a caffeinated golden retriever running for president"></textarea>
+          <div class="ai-actions">
+            <button type="button" class="btn btn-ghost" id="aiNameBtn">Generate name &amp; description</button>
+            <button type="button" class="btn btn-ghost" id="aiImageBtn">Generate icon image</button>
+          </div>
+          <div class="ai-status" id="aiStatus"></div>
+        </div>
 
         <label for="tName">Token Name</label>
         <input type="text" id="tName" placeholder="e.g. Drill Sergeant" maxlength="32">
@@ -317,6 +341,23 @@
         <div class="review-row"><span class="k">Decimals</span><span class="v" id="rvDecimals">—</span></div>
         <div class="review-row"><span class="k">Network</span><span class="v" id="rvNetwork">devnet</span></div>
         <div class="review-row"><span class="k">Security features</span><span class="v" id="rvFeatures">none</span></div>
+        <div class="review-row"><span class="k">Initial liquidity</span><span class="v" id="rvLiquidity">skipped</span></div>
+
+        <label class="feat" id="item-addLiquidity" style="margin-top:18px;">
+          <input type="checkbox" id="cb-addLiquidity">
+          <span class="swatch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span style="flex:1;">
+            <span class="feat-title">Add Initial Liquidity</span>
+            <span class="feat-desc">Right after minting, create a Raydium pool and seed it with your token + SOL — signed as the next transaction in this same launch, before you ever leave the page.</span>
+          </span>
+        </label>
+        <div id="liqFields" style="display:none; margin-top:4px;">
+          <div class="grid2">
+            <div><label for="liqTokenAmt">Token amount to deposit</label><input type="number" id="liqTokenAmt" placeholder="e.g. 200000000" min="0"></div>
+            <div><label for="liqSolAmt">SOL amount to deposit</label><input type="number" id="liqSolAmt" placeholder="e.g. 2" min="0" step="0.01"></div>
+          </div>
+          <div class="hint">Sets the starting price as SOL ÷ tokens. You'll need that much SOL and that many tokens already in the connected wallet — on top of the deploy fee above — plus roughly 0.15–0.2 extra SOL for pool-creation rent and fees.</div>
+        </div>
 
         <div class="fee-box">
           <div><div class="label">Total deploy fee</div><div class="total" id="feeTotal">0.10 SOL</div></div>
@@ -341,6 +382,24 @@
           <h3>✓ Token deployed</h3>
           <div class="addr" id="resultMint"></div>
           <div class="result-links" id="resultLinks"></div>
+
+          <div class="liq-section" id="liqSection" style="display:none;">
+            <h4 id="liqSectionTitle">Adding initial liquidity…</h4>
+            <p class="desc" id="liqSectionDesc">Seeding a Raydium pool with the amounts you set on the previous step.</p>
+            <div class="console" id="liqLog" aria-live="polite"></div>
+            <div class="result" id="liqResultBox">
+              <h3>✓ Liquidity pool created</h3>
+              <div class="addr" id="liqPoolId"></div>
+              <div class="result-links" id="liqResultLinks"></div>
+            </div>
+            <div id="liqManualFields" style="display:none;">
+              <div class="grid2">
+                <div><label for="liqTokenAmtManual">Token amount to deposit</label><input type="number" id="liqTokenAmtManual" placeholder="e.g. 200000000" min="0"></div>
+                <div><label for="liqSolAmtManual">SOL amount to deposit</label><input type="number" id="liqSolAmtManual" placeholder="e.g. 2" min="0" step="0.01"></div>
+              </div>
+              <button class="btn btn-grad" style="width:100%; padding:15px;" id="addLiqBtn">Create pool &amp; add liquidity</button>
+            </div>
+          </div>
         </div>
 
         <div class="step-actions">
@@ -403,6 +462,8 @@ let network = "mainnet-beta";
 let connection = new web3.Connection(RPC_ENDPOINTS[network], "confirmed");
 let walletPubkey = null;
 let currentStep = 1;
+let deployedMint = null;
+let deployedDecimals = null;
 
 // ---- Fee wallet QR code ----
 const $qrImg = document.getElementById('qrImg');
@@ -483,6 +544,13 @@ function onFeatureChange(){
   $('socialFields').style.display = $('cb-social').checked ? 'block' : 'none';
   updateFee(); syncPreview();
 }
+
+$('cb-addLiquidity').addEventListener('change', () => {
+  const on = $('cb-addLiquidity').checked;
+  $('item-addLiquidity').classList.toggle('on', on);
+  $('liqFields').style.display = on ? 'block' : 'none';
+  syncReview();
+});
 function updateFee(){
   let total = BASE_FEE_SOL;
   featureIds.forEach(id => { if($('cb-' + id).checked) total += FEATURE_FEES[id]; });
@@ -499,6 +567,12 @@ function syncReview(){
   $('rvNetwork').textContent = network;
   const chips = featureIds.filter(id => $('cb-' + id).checked);
   $('rvFeatures').textContent = chips.length ? chips.join(', ') : 'none';
+  if($('cb-addLiquidity').checked){
+    const t = $('liqTokenAmt').value, s = $('liqSolAmt').value;
+    $('rvLiquidity').textContent = (t && s) ? `${Number(t).toLocaleString()} tokens + ${s} SOL` : 'amounts needed';
+  } else {
+    $('rvLiquidity').textContent = 'skipped';
+  }
   updateFee();
 }
 
@@ -531,6 +605,13 @@ deployBtn.onclick = async () => {
 
   if(!name || !symbol || !supplyRaw || supplyRaw <= 0){
     logConsole('Fill in name, symbol, and supply before deploying.', 'err', true);
+    return;
+  }
+  const wantsLiquidity = $('cb-addLiquidity').checked;
+  const liqTokenAmt = parseFloat($('liqTokenAmt').value);
+  const liqSolAmt = parseFloat($('liqSolAmt').value);
+  if(wantsLiquidity && (!liqTokenAmt || liqTokenAmt <= 0 || !liqSolAmt || liqSolAmt <= 0)){
+    logConsole('Enter a token amount and a SOL amount for initial liquidity, or uncheck "Add Initial Liquidity".', 'err', true);
     return;
   }
   if(PLATFORM_WALLET_ADDRESS.startsWith('REPLACE_WITH')){
@@ -592,6 +673,8 @@ deployBtn.onclick = async () => {
     logConsole('Note: on-chain name/image display requires a Metaplex metadata account — add that program if you want it to show on explorers.', 'warn');
 
     const mintAddr = mintKeypair.publicKey.toBase58();
+    deployedMint = mintAddr;
+    deployedDecimals = decimals;
     $('resultMint').textContent = mintAddr;
     $('resultLinks').innerHTML = `
       <a href="https://solscan.io/token/${mintAddr}${network==='devnet' ? '?cluster=devnet':''}" target="_blank" rel="noopener">View on Solscan</a>
@@ -600,12 +683,189 @@ deployBtn.onclick = async () => {
     `;
     $('resultBox').classList.add('show');
     deployBtn.textContent = 'Deployed ✓';
+
+    if(wantsLiquidity){
+      logConsole('Continuing straight into adding initial liquidity…', 'ok');
+      await runAutoLiquidity(liqTokenAmt, liqSolAmt);
+    } else {
+      $('liqSection').style.display = 'block';
+      $('liqSectionTitle').textContent = 'Add liquidity whenever you\'re ready';
+      $('liqSectionDesc').textContent = 'You skipped this at launch — you can still create a Raydium pool for this token below.';
+      $('liqManualFields').style.display = 'block';
+    }
   }catch(err){
     console.error(err);
     logConsole('Failed: ' + (err.message || err), 'err');
     deployBtn.disabled = false; deployBtn.textContent = 'Pay fee & deploy token';
   }
 };
+
+/* ============ AI: name + icon generation ============ */
+function setAiStatus(msg, cls){ const el = $('aiStatus'); el.textContent = msg || ''; el.className = 'ai-status' + (cls ? ' ' + cls : ''); }
+function setAiBusy(busy){ $('aiNameBtn').disabled = busy; $('aiImageBtn').disabled = busy; }
+function applyAiIcon(dataUrl){
+  $('dzInner').innerHTML = `<img src="${dataUrl}" alt="Token icon preview"><div class="main-txt">AI-generated icon</div><div class="sub-txt">Click to replace</div>`;
+  $('pvIcon').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
+}
+
+$('aiNameBtn').addEventListener('click', async () => {
+  const prompt = $('aiPrompt').value.trim();
+  if(!prompt){ setAiStatus('Describe the coin idea first.', 'err'); return; }
+  setAiBusy(true); setAiStatus('Thinking of a name…');
+  try{
+    const r = await fetch('/api/ai/name', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt })
+    });
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.error || 'Failed to generate a name.');
+    if(data.name) $('tName').value = data.name;
+    if(data.symbol) $('tSymbol').value = String(data.symbol).toUpperCase();
+    if(data.description) $('tDesc').value = data.description;
+    syncPreview();
+    setAiStatus('Name generated ✓', 'ok');
+  }catch(err){
+    setAiStatus(err.message, 'err');
+  }finally{
+    setAiBusy(false);
+  }
+});
+
+$('aiImageBtn').addEventListener('click', async () => {
+  const prompt = $('aiPrompt').value.trim();
+  if(!prompt){ setAiStatus('Describe the coin idea first.', 'err'); return; }
+  setAiBusy(true); setAiStatus('Painting an icon… this can take up to 30s.');
+  try{
+    const r = await fetch('/api/ai/image', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt, name: $('tName').value.trim() })
+    });
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.error || 'Failed to generate an image.');
+    applyAiIcon(data.image);
+    setAiStatus('Icon generated ✓ — remember to host it (Arweave/IPFS/Imgur) and add the URL below for real on-chain metadata.', 'ok');
+  }catch(err){
+    setAiStatus(err.message, 'err');
+  }finally{
+    setAiBusy(false);
+  }
+});
+
+/* ============ Add initial liquidity (Raydium CPMM) ============ */
+function liqLog(msg, cls, show){
+  const box = $('liqLog');
+  if(show) box.classList.add('show');
+  const div = document.createElement('div');
+  div.className = cls || ''; div.textContent = '› ' + msg;
+  box.appendChild(div); box.scrollTop = box.scrollHeight;
+}
+
+// Builds, signs, and sends the Raydium CPMM pool-creation transaction.
+// Called automatically right after a successful deploy when "Add Initial
+// Liquidity" was checked, and also wired to the manual fallback button below.
+async function createLiquidityPool(tokenAmt, solAmt){
+  liqLog('Loading Raydium SDK…', null, true);
+  // Pulled from CDN at click-time rather than on page load, since it's a
+  // large, pre-1.0 package (@raydium-io/raydium-sdk-v2) — check
+  // https://docs.raydium.io/sdk-api/typescript-sdk if this shape has moved.
+  const [{ default: BN }, RaydiumSDK] = await Promise.all([
+    import("https://esm.sh/bn.js@5.2.1"),
+    import("https://esm.sh/@raydium-io/raydium-sdk-v2"),
+  ]);
+  const { Raydium, CREATE_CPMM_POOL_PROGRAM, CREATE_CPMM_POOL_FEE_ACC, DEVNET_PROGRAM_ID, getCpmmPdaAmmConfigId, TxVersion } = RaydiumSDK;
+
+  const programId = network === 'devnet' ? DEVNET_PROGRAM_ID.CREATE_CPMM_POOL_PROGRAM : CREATE_CPMM_POOL_PROGRAM;
+  const poolFeeAccount = network === 'devnet' ? DEVNET_PROGRAM_ID.CREATE_CPMM_POOL_FEE_ACC : CREATE_CPMM_POOL_FEE_ACC;
+
+  liqLog('Connecting to Raydium with your wallet…');
+  const raydium = await Raydium.load({
+    connection,
+    owner: walletPubkey,
+    signAllTransactions: window.solana.signAllTransactions.bind(window.solana),
+    disableLoadToken: false,
+  });
+
+  liqLog('Fetching token + pool-fee config…');
+  const mintA = await raydium.token.getTokenInfo(deployedMint);
+  const mintB = { address: 'So11111111111111111111111111111111111111112', programId: TOKEN_PROGRAM_ID.toBase58(), decimals: 9 };
+  let feeConfigs = await raydium.api.getCpmmConfigs();
+  if(network === 'devnet'){
+    feeConfigs = feeConfigs.map(c => ({ ...c, id: getCpmmPdaAmmConfigId(programId, c.index).publicKey.toBase58() }));
+  }
+
+  const mintAAmount = new BN(Math.round(tokenAmt * 10 ** deployedDecimals).toString());
+  const mintBAmount = new BN(Math.round(solAmt * web3.LAMPORTS_PER_SOL).toString());
+
+  liqLog('Building pool-creation transaction…');
+  const { execute, extInfo } = await raydium.cpmm.createPool({
+    programId,
+    poolFeeAccount,
+    mintA,
+    mintB,
+    mintAAmount,
+    mintBAmount,
+    startTime: new BN(Math.floor(Date.now() / 1000)),
+    feeConfig: feeConfigs[0],
+    associatedOnly: false,
+    ownerInfo: { useSOLBalance: true },
+    txVersion: TxVersion.V0,
+  });
+
+  liqLog('Sending transaction — approve in your wallet…');
+  const { txId } = await execute({ sendAndConfirm: true });
+  liqLog('Pool created: ' + txId.slice(0, 12) + '…', 'ok');
+
+  const poolId = extInfo.address.poolId.toBase58();
+  $('liqPoolId').textContent = poolId;
+  $('liqResultLinks').innerHTML = `
+    <a href="https://raydium.io/liquidity-pools/?token=${poolId}" target="_blank" rel="noopener">View pool on Raydium</a>
+    <a href="https://solscan.io/tx/${txId}${network==='devnet' ? '?cluster=devnet':''}" target="_blank" rel="noopener">View transaction</a>
+  `;
+  $('liqResultBox').classList.add('show');
+}
+
+// Auto-run right after deploy, using the amounts entered in Step 3.
+async function runAutoLiquidity(tokenAmt, solAmt){
+  $('liqSection').style.display = 'block';
+  $('liqSectionTitle').textContent = 'Adding initial liquidity…';
+  try{
+    await createLiquidityPool(tokenAmt, solAmt);
+    $('liqSectionTitle').textContent = '✓ Initial liquidity added';
+    $('liqSectionDesc').textContent = 'Your Raydium pool is live.';
+  }catch(err){
+    console.error(err);
+    liqLog('Failed: ' + (err.message || err), 'err', true);
+    $('liqSectionTitle').textContent = 'Initial liquidity failed';
+    $('liqSectionDesc').textContent = 'The token itself deployed fine — you can retry adding liquidity below.';
+    $('liqManualFields').style.display = 'block';
+  }
+}
+
+// Manual fallback — shown if liquidity was skipped at launch, or retried after a failure.
+const addLiqBtn = $('addLiqBtn');
+addLiqBtn.addEventListener('click', async () => {
+  const tokenAmt = parseFloat($('liqTokenAmtManual').value);
+  const solAmt = parseFloat($('liqSolAmtManual').value);
+
+  if(!walletPubkey){ liqLog('Connect your wallet first.', 'err', true); return; }
+  if(!deployedMint){ liqLog('Deploy the token above first.', 'err', true); return; }
+  if(!tokenAmt || tokenAmt <= 0 || !solAmt || solAmt <= 0){
+    liqLog('Enter a token amount and a SOL amount, both greater than 0.', 'err', true);
+    return;
+  }
+
+  addLiqBtn.disabled = true; addLiqBtn.textContent = 'Working…';
+  $('liqLog').classList.add('show'); $('liqLog').innerHTML = '';
+
+  try{
+    await createLiquidityPool(tokenAmt, solAmt);
+    addLiqBtn.textContent = 'Liquidity added ✓';
+    $('liqSectionTitle').textContent = '✓ Initial liquidity added';
+  }catch(err){
+    console.error(err);
+    liqLog('Failed: ' + (err.message || err), 'err', true);
+    addLiqBtn.disabled = false; addLiqBtn.textContent = 'Create pool & add liquidity';
+  }
+});
 </script>
 
 </body>
