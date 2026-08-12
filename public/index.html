@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Launch Console — Create a Solana Token</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:        #08090d;
+    --bg-2:      #0d0f16;
+    --glass:     rgba(255,255,255,0.035);
+    --glass-brd: rgba(255,255,255,0.08);
+    --line:      rgba(255,255,255,0.09);
+    --text:      #eef0f5;
+    --muted:     #8a8fa3;
+    --violet:    #8b5cf6;
+    --cyan:      #22d3ee;
+    --grad: linear-gradient(135deg, var(--violet), var(--cyan));
+    --warn:      #ffb84d;
+    --danger:    #ff5d7a;
+    --ok:        #35e39a;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --head: 'Sora', system-ui, sans-serif;
+    --body: 'Inter', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:var(--body);
+    line-height:1.5; min-height:100vh;
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(139,92,246,0.16), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(34,211,238,0.10), transparent 55%),
+      radial-gradient(ellipse 800px 600px at 50% 120%, rgba(139,92,246,0.08), transparent 60%);
+    background-attachment:fixed;
+  }
+  a{color:var(--cyan); text-decoration:none;}
+  ::selection{background:var(--violet); color:#fff;}
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:#2a2d3a; border-radius:8px;}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+  header{position:sticky; top:0; z-index:50; background:rgba(8,9,13,0.75); backdrop-filter:blur(14px); border-bottom:1px solid var(--line);}
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1180px; margin:0 auto;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--head); font-weight:700; font-size:17px;}
+  .brand .mark{width:30px; height:30px; border-radius:9px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-size:15px; box-shadow:0 0 22px rgba(139,92,246,0.5);}
+  .navlinks{display:flex; gap:28px; font-size:14px; color:var(--muted);}
+  .navlinks a{color:var(--muted);}
+  .navlinks a:hover{color:var(--text);}
+  @media (max-width:720px){.navlinks{display:none;}}
+  #walletBtn{
+    font-family:var(--body); font-weight:600; font-size:13.5px; padding:10px 18px;
+    background:var(--grad); border:none; color:#fff; border-radius:9px; cursor:pointer;
+    box-shadow:0 4px 20px -4px rgba(139,92,246,0.5); transition:transform .15s, box-shadow .15s;
+  }
+  #walletBtn:hover{transform:translateY(-1px); box-shadow:0 8px 26px -4px rgba(139,92,246,0.65);}
+  #walletBtn:focus-visible{outline:2px solid #fff; outline-offset:2px;}
+
+  .banner{text-align:center; font-size:12.5px; padding:9px; color:#0a0b0f; font-weight:600; background:linear-gradient(90deg, var(--cyan), var(--violet));}
+
+  .hero{padding:52px 0 28px; text-align:center;}
+  .eyebrow{display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--violet); background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.3); padding:6px 14px; border-radius:99px; margin-bottom:20px; letter-spacing:0.02em;}
+  h1{font-family:var(--head); font-size:clamp(28px,4.4vw,42px); font-weight:800; margin:0 0 12px; letter-spacing:-0.02em;}
+  h1 .grad{background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .sub{color:var(--muted); font-size:16px; max-width:52ch; margin:0 auto;}
+
+  .stepper{display:flex; align-items:center; justify-content:center; gap:0; margin:40px 0 4px; flex-wrap:wrap;}
+  .step{display:flex; align-items:center; gap:10px;}
+  .step-circle{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; font-weight:600; border:1.5px solid var(--line); color:var(--muted); background:var(--bg-2); transition:all .2s;}
+  .step.active .step-circle{border-color:transparent; background:var(--grad); color:#fff; box-shadow:0 0 18px rgba(139,92,246,0.55);}
+  .step.done .step-circle{border-color:var(--ok); color:var(--ok); background:rgba(53,227,154,0.08);}
+  .step-label{font-size:13.5px; color:var(--muted); font-weight:600;}
+  .step.active .step-label{color:var(--text);}
+  .step-line{width:56px; height:1.5px; background:var(--line); margin:0 10px;}
+  @media (max-width:640px){ .step-label{display:none;} .step-line{width:24px;} }
+
+  main{padding:32px 0 80px;}
+  .layout{display:grid; grid-template-columns:1fr 380px; gap:28px; align-items:start;}
+  @media (max-width:940px){ .layout{grid-template-columns:1fr;} }
+
+  .card{background:var(--glass); border:1px solid var(--glass-brd); border-radius:18px; padding:30px; backdrop-filter:blur(20px); box-shadow:0 30px 80px -40px rgba(0,0,0,0.6);}
+  .card h2{font-family:var(--head); font-size:20px; margin:0 0 6px;}
+  .card .desc{color:var(--muted); font-size:13.5px; margin-bottom:26px;}
+
+  .panel-step{display:none;}
+  .panel-step.active{display:block;}
+
+  label{display:block; font-size:13px; font-weight:600; color:var(--muted); margin-bottom:7px;}
+  input[type=text], input[type=number], input[type=url], textarea{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--glass-brd); color:var(--text);
+    border-radius:10px; padding:12px 14px; font-family:var(--body); font-size:14.5px;
+    margin-bottom:18px; transition:border-color .15s, background .15s;
+  }
+  input::placeholder, textarea::placeholder{color:#5b5f72;}
+  input:focus, textarea:focus{outline:none; border-color:var(--violet); background:rgba(139,92,246,0.06);}
+  input:focus-visible, textarea:focus-visible{outline:2px solid var(--violet); outline-offset:1px;}
+  textarea{min-height:80px; resize:vertical;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:520px){.grid2{grid-template-columns:1fr;}}
+  .hint{font-size:11.5px; color:#5b5f72; margin-top:-12px; margin-bottom:18px;}
+
+  .dropzone{border:1.5px dashed var(--glass-brd); border-radius:14px; padding:28px; text-align:center; cursor:pointer; transition:all .15s; margin-bottom:8px; background:rgba(255,255,255,0.02);}
+  .dropzone:hover, .dropzone.drag{border-color:var(--violet); background:rgba(139,92,246,0.06);}
+  .dropzone img{width:64px; height:64px; border-radius:14px; object-fit:cover; margin-bottom:10px;}
+  .dropzone .icon{width:44px; height:44px; margin:0 auto 12px; border-radius:12px; background:var(--grad); opacity:0.85; display:flex; align-items:center; justify-content:center; font-size:20px;}
+  .dropzone .main-txt{font-size:13.5px; font-weight:600;}
+  .dropzone .sub-txt{font-size:11.5px; color:var(--muted); margin-top:4px;}
+
+  .feat{display:flex; align-items:flex-start; gap:14px; padding:16px 18px; border-radius:12px; background:rgba(255,255,255,0.025); border:1px solid var(--glass-brd); cursor:pointer; margin-bottom:12px; transition:all .15s;}
+  .feat:hover{border-color:rgba(139,92,246,0.35);}
+  .feat.on{border-color:var(--violet); background:rgba(139,92,246,0.08); box-shadow:0 0 0 1px rgba(139,92,246,0.2) inset;}
+  .feat input{display:none;}
+  .swatch{width:20px; height:20px; border-radius:6px; border:1.5px solid var(--glass-brd); flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; transition:all .15s;}
+  .feat.on .swatch{background:var(--grad); border-color:transparent;}
+  .swatch svg{opacity:0; transition:opacity .15s;}
+  .feat.on .swatch svg{opacity:1;}
+  .feat-title{font-weight:600; font-size:14.5px; display:flex; justify-content:space-between; gap:10px;}
+  .feat-title .fee{color:var(--warn); font-weight:500; font-size:12px; font-family:var(--mono);}
+  .feat-desc{color:var(--muted); font-size:12.5px; margin-top:4px;}
+
+  .network-toggle{display:flex; gap:8px; margin-bottom:8px;}
+  .net-btn{font-size:12.5px; font-weight:600; padding:9px 16px; border-radius:9px; border:1px solid var(--glass-brd); background:rgba(255,255,255,0.03); color:var(--muted); cursor:pointer;}
+  .net-btn.active{border-color:var(--violet); color:#fff; background:rgba(139,92,246,0.15);}
+  .net-warn{font-size:12.5px; color:var(--warn); margin:10px 0 20px; display:none;}
+  .net-warn.show{display:block;}
+
+  .step-actions{display:flex; justify-content:space-between; margin-top:28px; gap:12px;}
+  .btn{font-family:var(--body); font-weight:600; font-size:14px; padding:12px 22px; border-radius:10px; cursor:pointer; border:none;}
+  .btn-ghost{background:transparent; border:1px solid var(--glass-brd); color:var(--text);}
+  .btn-ghost:hover{border-color:var(--muted);}
+  .btn-ghost:disabled{opacity:0.3; cursor:not-allowed;}
+  .btn-grad{background:var(--grad); color:#fff; box-shadow:0 4px 20px -6px rgba(139,92,246,0.6);}
+  .btn-grad:hover:not(:disabled){transform:translateY(-1px);}
+  .btn-grad:disabled{opacity:0.35; cursor:not-allowed; transform:none;}
+  .btn:focus-visible{outline:2px solid #fff; outline-offset:2px;}
+
+  .review-row{display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--glass-brd); font-size:13.5px;}
+  .review-row:last-child{border-bottom:none;}
+  .review-row .k{color:var(--muted);}
+  .review-row .v{font-weight:600; font-family:var(--mono); font-size:13px; text-align:right;}
+  .fee-box{margin-top:20px; padding:20px; border-radius:14px; background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.25); display:flex; justify-content:space-between; align-items:center;}
+  .fee-box .label{font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.06em;}
+  .fee-box .total{font-family:var(--head); font-size:26px; font-weight:800; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .config-note{font-size:12px; color:var(--warn); background:rgba(255,184,77,0.08); border:1px solid rgba(255,184,77,0.25); border-radius:10px; padding:12px 14px; margin:18px 0;}
+
+  .qr-box{display:flex; gap:18px; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-brd); border-radius:14px; padding:18px; margin:18px 0;}
+  .qr-left img{border-radius:10px; background:#fff; padding:8px; display:block;}
+  .qr-right{flex:1; min-width:0;}
+  .qr-addr{font-family:var(--mono); font-size:11.5px; color:var(--muted); word-break:break-all; line-height:1.5;}
+  @media (max-width:480px){ .qr-box{flex-direction:column; align-items:flex-start;} }
+
+  .console{margin-top:18px; background:#050608; border:1px solid var(--glass-brd); border-radius:12px; padding:16px 18px; font-family:var(--mono); font-size:12.3px; max-height:230px; overflow-y:auto; display:none;}
+  .console.show{display:block;}
+  .console div{color:var(--muted); padding:2px 0;}
+  .console div.ok{color:var(--ok);} .console div.err{color:var(--danger);} .console div.warn{color:var(--warn);}
+
+  .result{margin-top:18px; padding:22px; border-radius:14px; border:1px solid rgba(53,227,154,0.35); background:rgba(53,227,154,0.06); display:none;}
+  .result.show{display:block;}
+  .result h3{font-family:var(--head); margin:0 0 10px; color:var(--ok);}
+  .result .addr{font-family:var(--mono); font-size:12.5px; word-break:break-all; background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:8px; margin-bottom:14px;}
+  .result-links{display:flex; flex-wrap:wrap; gap:9px;}
+  .result-links a{font-size:12px; font-weight:600; border:1px solid var(--glass-brd); padding:8px 13px; border-radius:8px;}
+  .result-links a:hover{border-color:var(--violet);}
+
+  .preview{position:sticky; top:96px;}
+  .preview-card{background:var(--glass); border:1px solid var(--glass-brd); border-radius:18px; padding:26px; backdrop-filter:blur(20px); box-shadow:0 30px 80px -40px rgba(0,0,0,0.6);}
+  .preview-label{font-size:11.5px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:18px;}
+  .preview-token{display:flex; align-items:center; gap:14px; margin-bottom:20px;}
+  .preview-icon{width:56px; height:56px; border-radius:16px; background:var(--grad); flex-shrink:0; object-fit:cover; display:flex; align-items:center; justify-content:center; font-family:var(--head); font-weight:800; color:#fff; font-size:20px; overflow:hidden;}
+  .preview-name{font-family:var(--head); font-weight:700; font-size:17px;}
+  .preview-symbol{font-family:var(--mono); font-size:12.5px; color:var(--cyan);}
+  .preview-stats{display:flex; flex-direction:column; gap:10px; font-size:13px; margin-bottom:20px;}
+  .preview-stats .row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--glass-brd);}
+  .preview-stats .row .k{color:var(--muted);}
+  .preview-stats .row .v{font-family:var(--mono); font-weight:600;}
+  .preview-desc{font-size:12.5px; color:var(--muted); margin-bottom:20px; line-height:1.6;}
+  .chips{display:flex; flex-wrap:wrap; gap:7px;}
+  .chip{font-size:11px; font-weight:600; padding:6px 11px; border-radius:99px; background:rgba(53,227,154,0.1); border:1px solid rgba(53,227,154,0.3); color:var(--ok);}
+  .chip.empty{background:rgba(255,255,255,0.04); border-color:var(--glass-brd); color:var(--muted);}
+
+  footer{padding:32px 0 60px; color:var(--muted); font-size:12.5px; text-align:center; border-top:1px solid var(--line); margin-top:40px;}
+  footer a{color:var(--muted); border-bottom:1px dotted var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="banner">Testnet mode is on by default — practice a full launch with free devnet SOL before you spend anything real.</div>
+
+<header>
+  <div class="nav">
+    <div class="brand"><span class="mark">◆</span> Launch Console</div>
+    <div class="navlinks"><a href="#build">Create Token</a><a href="https://raydium.io/liquidity/create/" target="_blank" rel="noopener">Add Liquidity</a></div>
+    <button id="walletBtn">Connect Wallet</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">● Live on Solana</div>
+    <h1>Create your <span class="grad">SPL token</span><br>in three steps</h1>
+    <p class="sub">Configure it, review the real cost, sign once. Nothing on this page fakes activity that isn't actually happening on-chain.</p>
+  </div>
+
+  <div class="stepper" id="stepper">
+    <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Token Info</div></div>
+    <div class="step-line"></div>
+    <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Advanced Settings</div></div>
+    <div class="step-line"></div>
+    <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Review &amp; Create</div></div>
+  </div>
+</div>
+
+<main class="wrap" id="build">
+  <div class="layout">
+    <div class="card">
+
+      <div class="panel-step active" id="panel-1">
+        <h2>Token Info</h2>
+        <p class="desc">The basics — this is what holders will see everywhere your token shows up.</p>
+
+        <label for="tName">Token Name</label>
+        <input type="text" id="tName" placeholder="e.g. Drill Sergeant" maxlength="32">
+
+        <div class="grid2">
+          <div>
+            <label for="tSymbol">Symbol</label>
+            <input type="text" id="tSymbol" placeholder="DRILL" maxlength="10" style="text-transform:uppercase;">
+          </div>
+          <div>
+            <label for="tDecimals">Decimals</label>
+            <input type="number" id="tDecimals" value="9" min="0" max="9">
+          </div>
+        </div>
+
+        <label for="tSupply">Total Supply</label>
+        <input type="number" id="tSupply" placeholder="1000000000" min="1">
+
+        <label for="tDesc">Description</label>
+        <textarea id="tDesc" placeholder="What is this token about?"></textarea>
+
+        <label>Token Icon</label>
+        <div class="dropzone" id="dropzone">
+          <div id="dzInner">
+            <div class="icon">⤒</div>
+            <div class="main-txt">Click to upload</div>
+            <div class="sub-txt">or drag and drop — PNG, JPG, up to 10MB</div>
+          </div>
+        </div>
+        <input type="file" id="tIconFile" accept="image/png,image/jpeg,image/gif" style="display:none;">
+        <div class="hint">Preview only — for real on-chain metadata, host the image somewhere public (Arweave, IPFS, Imgur) and add the URL in Advanced Settings.</div>
+
+        <div class="step-actions">
+          <button class="btn btn-ghost" disabled>Previous</button>
+          <button class="btn btn-grad" onclick="goStep(2)">Next</button>
+        </div>
+      </div>
+
+      <div class="panel-step" id="panel-2">
+        <h2>Advanced Settings</h2>
+        <p class="desc">Every toggle here changes a real on-chain authority — not cosmetic.</p>
+
+        <label>Network</label>
+        <div class="network-toggle">
+          <button class="net-btn active" id="btnDevnet">Devnet (test)</button>
+          <button class="net-btn" id="btnMainnet">Mainnet (real)</button>
+        </div>
+        <div class="net-warn" id="mainnetWarn">⚠ Mainnet selected — real SOL, real and irreversible deployment.</div>
+
+        <label style="margin-top:8px;">Security Features</label>
+        <label class="feat" id="item-revokeMint">
+          <input type="checkbox" id="cb-revokeMint">
+          <span class="swatch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span style="flex:1;">
+            <span class="feat-title">Revoke Mint Authority <span class="fee">+0.05 SOL</span></span>
+            <span class="feat-desc">Permanently blocks minting more supply later. Most holders check for this.</span>
+          </span>
+        </label>
+        <label class="feat" id="item-revokeFreeze">
+          <input type="checkbox" id="cb-revokeFreeze">
+          <span class="swatch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span style="flex:1;">
+            <span class="feat-title">Revoke Freeze Authority <span class="fee">+0.05 SOL</span></span>
+            <span class="feat-desc">Removes your ability to freeze holder wallets.</span>
+          </span>
+        </label>
+        <label class="feat" id="item-immutable">
+          <input type="checkbox" id="cb-immutable">
+          <span class="swatch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span style="flex:1;">
+            <span class="feat-title">Revoke Update Authority (immutable) <span class="fee">+0.03 SOL</span></span>
+            <span class="feat-desc">Locks name, symbol, and image forever — no future edits.</span>
+          </span>
+        </label>
+        <label class="feat" id="item-social">
+          <input type="checkbox" id="cb-social">
+          <span class="swatch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span style="flex:1;">
+            <span class="feat-title">Attach Social Links <span class="fee">+0.02 SOL</span></span>
+            <span class="feat-desc">Adds website / X / Telegram to on-chain metadata.</span>
+          </span>
+        </label>
+
+        <div id="socialFields" style="display:none; margin-top:8px;">
+          <div class="grid2">
+            <div><label for="sWebsite">Website</label><input type="url" id="sWebsite" placeholder="https://"></div>
+            <div><label for="sTwitter">X / Twitter</label><input type="url" id="sTwitter" placeholder="https://x.com/..."></div>
+          </div>
+        </div>
+        <label for="tImageUrl">Hosted Image URL (optional, for real metadata)</label>
+        <input type="url" id="tImageUrl" placeholder="https://...">
+
+        <div class="step-actions">
+          <button class="btn btn-ghost" onclick="goStep(1)">Previous</button>
+          <button class="btn btn-grad" onclick="goStep(3)">Next</button>
+        </div>
+      </div>
+
+      <div class="panel-step" id="panel-3">
+        <h2>Review &amp; Create</h2>
+        <p class="desc">Confirm everything, then sign the fee payment and the deploy transaction.</p>
+
+        <div class="review-row"><span class="k">Name</span><span class="v" id="rvName">—</span></div>
+        <div class="review-row"><span class="k">Symbol</span><span class="v" id="rvSymbol">—</span></div>
+        <div class="review-row"><span class="k">Supply</span><span class="v" id="rvSupply">—</span></div>
+        <div class="review-row"><span class="k">Decimals</span><span class="v" id="rvDecimals">—</span></div>
+        <div class="review-row"><span class="k">Network</span><span class="v" id="rvNetwork">devnet</span></div>
+        <div class="review-row"><span class="k">Security features</span><span class="v" id="rvFeatures">none</span></div>
+
+        <div class="fee-box">
+          <div><div class="label">Total deploy fee</div><div class="total" id="feeTotal">0.10 SOL</div></div>
+        </div>
+
+        <div class="qr-box" id="qrBox">
+          <div class="qr-left">
+            <img id="qrImg" alt="QR code for the fee wallet address" width="132" height="132">
+          </div>
+          <div class="qr-right">
+            <div class="preview-label" style="margin-bottom:8px;">Or send manually</div>
+            <div class="qr-addr" id="qrAddr"></div>
+            <button class="btn btn-ghost" id="copyAddrBtn" style="padding:8px 14px; font-size:12.5px; margin-top:10px;">Copy address</button>
+          </div>
+        </div>
+
+        <button class="btn btn-grad" style="width:100%; padding:15px;" id="deployBtn" disabled>Connect wallet to deploy</button>
+
+        <div class="console" id="consoleLog" aria-live="polite"></div>
+
+        <div class="result" id="resultBox">
+          <h3>✓ Token deployed</h3>
+          <div class="addr" id="resultMint"></div>
+          <div class="result-links" id="resultLinks"></div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-ghost" onclick="goStep(2)">Previous</button>
+          <div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="preview">
+      <div class="preview-card">
+        <div class="preview-label">Token Preview</div>
+        <div class="preview-token">
+          <div class="preview-icon" id="pvIcon">◆</div>
+          <div>
+            <div class="preview-name" id="pvName">Token Name</div>
+            <div class="preview-symbol" id="pvSymbol">$SYMBOL</div>
+          </div>
+        </div>
+        <div class="preview-stats">
+          <div class="row"><span class="k">Total Supply</span><span class="v" id="pvSupply">1,000,000,000</span></div>
+          <div class="row"><span class="k">Decimals</span><span class="v" id="pvDecimals">9</span></div>
+        </div>
+        <div class="preview-desc" id="pvDesc">Your token description will appear here.</div>
+        <div class="preview-label" style="margin-bottom:10px;">Security Features</div>
+        <div class="chips" id="pvChips"><span class="chip empty">None selected</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    Launch Console mints real SPL tokens on Solana. It does not, and will not, simulate trading activity, fake
+    volume, or provide a way to freeze or drain holder funds after launch. Deploying is a real, irreversible,
+    on-chain action once confirmed on mainnet.
+    <br><br>
+    Built with <a href="https://solana.com" target="_blank" rel="noopener">Solana web3.js</a> and the
+    <a href="https://spl.solana.com/token" target="_blank" rel="noopener">SPL Token program</a>.
+  </div>
+</footer>
+
+<script type="module">
+import * as web3 from "https://esm.sh/@solana/web3.js@1.95.3";
+import {
+  createInitializeMintInstruction, createMintToInstruction, getMinimumBalanceForRentExemptMint,
+  MINT_SIZE, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction,
+  AuthorityType, createSetAuthorityInstruction,
+} from "https://esm.sh/@solana/spl-token@0.4.9";
+
+/* ============ CONFIG — edit before going live ============ */
+const PLATFORM_WALLET_ADDRESS = "7hzoNoiCCTBCDh1x227NBHLzojv7JjZ7sqa5nwvXhMfc";
+const BASE_FEE_SOL = 0.10;
+const FEATURE_FEES = { revokeMint: 0.05, revokeFreeze: 0.05, immutable: 0.03, social: 0.02 };
+const RPC_ENDPOINTS = { "devnet": web3.clusterApiUrl("devnet"), "mainnet-beta": web3.clusterApiUrl("mainnet-beta") };
+/* =========================================================== */
+
+let network = "devnet";
+let connection = new web3.Connection(RPC_ENDPOINTS[network], "confirmed");
+let walletPubkey = null;
+let currentStep = 1;
+
+// ---- Fee wallet QR code ----
+const $qrImg = document.getElementById('qrImg');
+const $qrAddr = document.getElementById('qrAddr');
+if($qrImg && $qrAddr){
+  $qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(PLATFORM_WALLET_ADDRESS)}`;
+  $qrAddr.textContent = PLATFORM_WALLET_ADDRESS;
+}
+document.getElementById('copyAddrBtn')?.addEventListener('click', async (e) => {
+  try{
+    await navigator.clipboard.writeText(PLATFORM_WALLET_ADDRESS);
+    e.target.textContent = 'Copied ✓';
+    setTimeout(() => { e.target.textContent = 'Copy address'; }, 1500);
+  }catch(err){}
+});
+
+window.goStep = function(n){
+  document.getElementById('panel-' + currentStep).classList.remove('active');
+  document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+  if(n > currentStep) document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('done');
+  currentStep = n;
+  document.getElementById('panel-' + n).classList.add('active');
+  document.querySelector(`.step[data-step="${n}"]`).classList.add('active');
+  document.querySelector(`.step[data-step="${n}"]`).classList.remove('done');
+  if(n === 3) syncReview();
+  window.scrollTo({top: document.getElementById('build').offsetTop - 90, behavior:'smooth'});
+};
+
+const $ = id => document.getElementById(id);
+function syncPreview(){
+  const name = $('tName').value.trim() || 'Token Name';
+  const symbol = $('tSymbol').value.trim().toUpperCase() || 'SYMBOL';
+  const supply = $('tSupply').value ? Number($('tSupply').value).toLocaleString() : '1,000,000,000';
+  const decimals = $('tDecimals').value || '9';
+  const desc = $('tDesc').value.trim() || 'Your token description will appear here.';
+
+  $('pvName').textContent = name;
+  $('pvSymbol').textContent = '$' + symbol;
+  $('pvSupply').textContent = supply;
+  $('pvDecimals').textContent = decimals;
+  $('pvDesc').textContent = desc;
+  if(!$('pvIcon').querySelector('img')) $('pvIcon').textContent = symbol.charAt(0) || '◆';
+
+  const chips = [];
+  if($('cb-revokeMint').checked) chips.push('Revoke Mint Authority');
+  if($('cb-revokeFreeze').checked) chips.push('Revoke Freeze Authority');
+  if($('cb-immutable').checked) chips.push('Revoke Update Authority');
+  if($('cb-social').checked) chips.push('Social Links');
+  $('pvChips').innerHTML = chips.length
+    ? chips.map(c => `<span class="chip">${c}</span>`).join('')
+    : '<span class="chip empty">None selected</span>';
+}
+['tName','tSymbol','tSupply','tDecimals','tDesc'].forEach(id => $(id).addEventListener('input', syncPreview));
+syncPreview();
+
+const dropzone = $('dropzone'), fileInput = $('tIconFile');
+dropzone.onclick = () => fileInput.click();
+['dragover','dragleave','drop'].forEach(evt => {
+  dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.toggle('drag', evt === 'dragover'); });
+});
+dropzone.addEventListener('drop', e => { if(e.dataTransfer.files[0]) handleIcon(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if(e.target.files[0]) handleIcon(e.target.files[0]); });
+function handleIcon(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    $('dzInner').innerHTML = `<img src="${e.target.result}" alt="Token icon preview"><div class="main-txt">${file.name}</div><div class="sub-txt">Click to replace</div>`;
+    $('pvIcon').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+$('btnDevnet').onclick = () => setNetwork('devnet');
+$('btnMainnet').onclick = () => setNetwork('mainnet-beta');
+function setNetwork(net){
+  network = net;
+  connection = new web3.Connection(RPC_ENDPOINTS[net], "confirmed");
+  $('btnDevnet').classList.toggle('active', net==='devnet');
+  $('btnMainnet').classList.toggle('active', net==='mainnet-beta');
+  $('mainnetWarn').classList.toggle('show', net==='mainnet-beta');
+}
+
+const featureIds = ['revokeMint','revokeFreeze','immutable','social'];
+featureIds.forEach(id => {
+  const item = $('item-' + id), cb = $('cb-' + id);
+  item.addEventListener('click', e => { if(e.target.tagName !== 'INPUT'){ cb.checked = !cb.checked; } onFeatureChange(); });
+});
+function onFeatureChange(){
+  featureIds.forEach(id => $('item-' + id).classList.toggle('on', $('cb-' + id).checked));
+  $('socialFields').style.display = $('cb-social').checked ? 'block' : 'none';
+  updateFee(); syncPreview();
+}
+function updateFee(){
+  let total = BASE_FEE_SOL;
+  featureIds.forEach(id => { if($('cb-' + id).checked) total += FEATURE_FEES[id]; });
+  $('feeTotal').textContent = total.toFixed(3) + ' SOL';
+  return total;
+}
+updateFee();
+
+function syncReview(){
+  $('rvName').textContent = $('tName').value.trim() || '—';
+  $('rvSymbol').textContent = $('tSymbol').value.trim().toUpperCase() || '—';
+  $('rvSupply').textContent = $('tSupply').value ? Number($('tSupply').value).toLocaleString() : '—';
+  $('rvDecimals').textContent = $('tDecimals').value || '—';
+  $('rvNetwork').textContent = network;
+  const chips = featureIds.filter(id => $('cb-' + id).checked);
+  $('rvFeatures').textContent = chips.length ? chips.join(', ') : 'none';
+  updateFee();
+}
+
+const walletBtn = $('walletBtn'), deployBtn = $('deployBtn');
+walletBtn.onclick = async () => {
+  if(!window.solana || !window.solana.isPhantom){ window.open('https://phantom.app/', '_blank'); return; }
+  try{
+    const resp = await window.solana.connect();
+    walletPubkey = resp.publicKey;
+    walletBtn.textContent = walletPubkey.toBase58().slice(0,4) + '…' + walletPubkey.toBase58().slice(-4);
+    deployBtn.disabled = false;
+    deployBtn.textContent = 'Pay fee & deploy token';
+  }catch(err){}
+};
+
+function logConsole(msg, cls, show){
+  const box = $('consoleLog');
+  if(show) box.classList.add('show');
+  const div = document.createElement('div');
+  div.className = cls || ''; div.textContent = '› ' + msg;
+  box.appendChild(div); box.scrollTop = box.scrollHeight;
+}
+
+deployBtn.onclick = async () => {
+  if(!walletPubkey) return;
+  const name = $('tName').value.trim();
+  const symbol = $('tSymbol').value.trim().toUpperCase();
+  const supplyRaw = parseFloat($('tSupply').value);
+  const decimals = parseInt($('tDecimals').value, 10);
+
+  if(!name || !symbol || !supplyRaw || supplyRaw <= 0){
+    logConsole('Fill in name, symbol, and supply before deploying.', 'err', true);
+    return;
+  }
+  if(PLATFORM_WALLET_ADDRESS.startsWith('REPLACE_WITH')){
+    logConsole('Platform fee wallet is not configured — edit PLATFORM_WALLET_ADDRESS in the script.', 'err', true);
+    return;
+  }
+
+  deployBtn.disabled = true; deployBtn.textContent = 'Working…';
+  $('consoleLog').classList.add('show'); $('consoleLog').innerHTML = '';
+
+  try{
+    const feeSol = updateFee();
+    const feeLamports = Math.round(feeSol * web3.LAMPORTS_PER_SOL);
+    const platformPubkey = new web3.PublicKey(PLATFORM_WALLET_ADDRESS);
+
+    logConsole(`Requesting ${feeSol.toFixed(3)} SOL fee payment...`);
+    const feeTx = new web3.Transaction().add(
+      web3.SystemProgram.transfer({ fromPubkey: walletPubkey, toPubkey: platformPubkey, lamports: feeLamports })
+    );
+    feeTx.feePayer = walletPubkey;
+    feeTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    const signedFeeTx = await window.solana.signTransaction(feeTx);
+    const feeSig = await connection.sendRawTransaction(signedFeeTx.serialize());
+    await connection.confirmTransaction(feeSig, 'confirmed');
+    logConsole('Fee payment confirmed: ' + feeSig.slice(0,12) + '…', 'ok');
+
+    logConsole('Creating mint account...');
+    const mintKeypair = web3.Keypair.generate();
+    const rentLamports = await getMinimumBalanceForRentExemptMint(connection);
+
+    const tx = new web3.Transaction();
+    tx.add(
+      web3.SystemProgram.createAccount({
+        fromPubkey: walletPubkey, newAccountPubkey: mintKeypair.publicKey,
+        space: MINT_SIZE, lamports: rentLamports, programId: TOKEN_PROGRAM_ID,
+      }),
+      createInitializeMintInstruction(mintKeypair.publicKey, decimals, walletPubkey, walletPubkey, TOKEN_PROGRAM_ID)
+    );
+
+    const ata = await getAssociatedTokenAddress(mintKeypair.publicKey, walletPubkey);
+    tx.add(createAssociatedTokenAccountInstruction(walletPubkey, ata, walletPubkey, mintKeypair.publicKey));
+    const rawSupply = BigInt(Math.round(supplyRaw)) * BigInt(10 ** decimals);
+    tx.add(createMintToInstruction(mintKeypair.publicKey, ata, walletPubkey, rawSupply, [], TOKEN_PROGRAM_ID));
+
+    if($('cb-revokeMint').checked) tx.add(createSetAuthorityInstruction(mintKeypair.publicKey, walletPubkey, AuthorityType.MintTokens, null));
+    if($('cb-revokeFreeze').checked) tx.add(createSetAuthorityInstruction(mintKeypair.publicKey, walletPubkey, AuthorityType.FreezeAccount, null));
+
+    tx.feePayer = walletPubkey;
+    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    tx.partialSign(mintKeypair);
+
+    const signedTx = await window.solana.signTransaction(tx);
+    logConsole('Submitting mint transaction to ' + network + '...');
+    const sig = await connection.sendRawTransaction(signedTx.serialize());
+    await connection.confirmTransaction(sig, 'confirmed');
+    logConsole('Mint transaction confirmed: ' + sig.slice(0,12) + '…', 'ok');
+    if($('cb-revokeMint').checked) logConsole('Mint authority revoked.', 'ok');
+    if($('cb-revokeFreeze').checked) logConsole('Freeze authority revoked.', 'ok');
+    logConsole('Note: on-chain name/image display requires a Metaplex metadata account — add that program if you want it to show on explorers.', 'warn');
+
+    const mintAddr = mintKeypair.publicKey.toBase58();
+    $('resultMint').textContent = mintAddr;
+    $('resultLinks').innerHTML = `
+      <a href="https://solscan.io/token/${mintAddr}${network==='devnet' ? '?cluster=devnet':''}" target="_blank" rel="noopener">View on Solscan</a>
+      <a href="https://raydium.io/liquidity/create/" target="_blank" rel="noopener">Create Raydium pool</a>
+      <a href="https://birdeye.so/token/${mintAddr}" target="_blank" rel="noopener">View on Birdeye</a>
+    `;
+    $('resultBox').classList.add('show');
+    deployBtn.textContent = 'Deployed ✓';
+  }catch(err){
+    console.error(err);
+    logConsole('Failed: ' + (err.message || err), 'err');
+    deployBtn.disabled = false; deployBtn.textContent = 'Pay fee & deploy token';
+  }
+};
+</script>
+
+</body>
+</html>
