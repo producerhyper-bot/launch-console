@@ -192,6 +192,61 @@
   .liq-section h4{font-family:var(--head); font-size:15.5px; margin:0 0 6px;}
   .liq-section .desc{color:var(--muted); font-size:12.5px; margin-bottom:16px;}
   .liq-section .hint{margin-top:-10px;}
+
+  /* ---- Trust strip ---- */
+  .trust-strip{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:26px 0 6px;}
+  .trust-item{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600; color:var(--muted); background:rgba(255,255,255,0.03); border:1px solid var(--glass-brd); padding:8px 14px; border-radius:99px;}
+  .trust-item svg{flex-shrink:0;}
+  @media (max-width:720px){ .trust-strip{gap:8px;} .trust-item{font-size:11.5px; padding:7px 11px;} }
+
+  /* ---- AI box polish ---- */
+  .ai-box{position:relative;}
+  .ai-box .ai-heading{display:flex; align-items:center; gap:8px; margin-bottom:2px;}
+  .ai-box .ai-heading .spark{width:22px; height:22px; border-radius:7px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; box-shadow:0 0 14px rgba(139,92,246,0.4);}
+  .ai-fallback-note{font-size:11.5px; color:#5b5f72; margin-top:8px; display:none;}
+  .ai-fallback-note.show{display:block;}
+
+  /* ---- Manage / post-launch dashboard ---- */
+  .manage-section{margin-top:24px; padding-top:24px; border-top:1px solid rgba(139,92,246,0.25);}
+  .manage-head{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px;}
+  .manage-head h4{font-family:var(--head); font-size:16.5px; margin:0;}
+  .live-dot{display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--ok); text-transform:uppercase; letter-spacing:0.05em;}
+  .live-dot::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 0 rgba(53,227,154,0.6); animation:pulse-dot 1.8s infinite;}
+  @keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(53,227,154,0.55);} 70%{box-shadow:0 0 0 7px rgba(53,227,154,0);} 100%{box-shadow:0 0 0 0 rgba(53,227,154,0);}}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;}
+  @media (max-width:720px){ .stat-grid{grid-template-columns:repeat(2,1fr);} }
+  .stat-tile{background:rgba(255,255,255,0.025); border:1px solid var(--glass-brd); border-radius:12px; padding:14px 16px;}
+  .stat-tile .lbl{font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+  .stat-tile .val{font-family:var(--mono); font-size:16.5px; font-weight:600;}
+  .stat-tile .val.up{color:var(--ok);} .stat-tile .val.down{color:var(--danger);}
+  .stat-tile .sub{font-size:11px; color:#5b5f72; margin-top:3px;}
+
+  .chart-frame{width:100%; height:420px; border-radius:14px; overflow:hidden; border:1px solid var(--glass-brd); background:#050608; margin-bottom:22px; position:relative;}
+  .chart-frame iframe{width:100%; height:100%; border:0;}
+  .chart-empty{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; gap:8px;}
+  .chart-empty .big{font-size:26px;}
+  .chart-empty .t1{font-weight:600; font-size:14px;}
+  .chart-empty .t2{font-size:12.5px; color:var(--muted); max-width:38ch;}
+
+  .sell-card{background:rgba(255,93,122,0.05); border:1px solid rgba(255,93,122,0.22); border-radius:14px; padding:20px 22px;}
+  .sell-card h5{font-family:var(--head); font-size:14.5px; margin:0 0 4px;}
+  .sell-card .desc{color:var(--muted); font-size:12px; margin-bottom:16px;}
+  .sell-row{display:flex; gap:10px; margin-bottom:12px;}
+  .sell-row input{margin-bottom:0; flex:1;}
+  .pct-row{display:flex; gap:8px; margin-bottom:16px;}
+  .pct-btn{flex:1; padding:8px 0; font-size:12.5px; font-weight:600; border-radius:8px; border:1px solid var(--glass-brd); background:rgba(255,255,255,0.03); color:var(--muted); cursor:pointer; transition:all .15s; font-family:var(--body);}
+  .pct-btn:hover{border-color:var(--danger); color:var(--text);}
+  .pct-btn.sel{border-color:var(--danger); background:rgba(255,93,122,0.12); color:var(--text);}
+  .quote-box{display:none; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--glass-brd); border-radius:10px; padding:13px 16px; margin-bottom:16px; font-size:13px;}
+  .quote-box.show{display:flex;}
+  .quote-box .k{color:var(--muted); font-size:11.5px;}
+  .quote-box .v{font-family:var(--mono); font-weight:700; font-size:15px;}
+  .btn-danger{background:linear-gradient(135deg,#ff5d7a,#ff8c5d); color:#fff; box-shadow:0 4px 20px -6px rgba(255,93,122,0.55);}
+  .btn-danger:hover:not(:disabled){transform:translateY(-1px);}
+  .btn-danger:disabled{opacity:0.35; cursor:not-allowed;}
+  .balance-line{font-size:11.5px; color:var(--muted); margin-bottom:14px;}
+  .balance-line b{color:var(--text); font-family:var(--mono);}
 </style>
 </head>
 <body>
@@ -211,6 +266,11 @@
     <div class="eyebrow">● Live on Solana</div>
     <h1>Create your <span class="grad">SPL token</span><br>in three steps</h1>
     <p class="sub">Configure it, review the real cost, sign once. Nothing on this page fakes activity that isn't actually happening on-chain.</p>
+    <div class="trust-strip">
+      <span class="trust-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" stroke="#35e39a" stroke-width="2" stroke-linejoin="round"/></svg> Self-custody — you sign every transaction</span>
+      <span class="trust-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#35e39a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> No freeze or drain authority, ever</span>
+      <span class="trust-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#35e39a" stroke-width="2"/><path d="M12 7v5l3.5 2" stroke="#35e39a" stroke-width="2" stroke-linecap="round"/></svg> Real-time, unfaked on-chain data</span>
+    </div>
   </div>
 
   <div class="stepper" id="stepper">
@@ -231,13 +291,14 @@
         <p class="desc">The basics — this is what holders will see everywhere your token shows up.</p>
 
         <div class="ai-box">
-          <label for="aiPrompt">✨ Not sure what to call it? Describe the idea</label>
+          <div class="ai-heading"><span class="spark">✨</span><label for="aiPrompt" style="margin-bottom:0;">Not sure what to call it? Describe the idea</label></div>
           <textarea id="aiPrompt" placeholder="e.g. a caffeinated golden retriever running for president"></textarea>
           <div class="ai-actions">
             <button type="button" class="btn btn-ghost" id="aiNameBtn">Generate name &amp; description</button>
             <button type="button" class="btn btn-ghost" id="aiImageBtn">Generate icon image</button>
           </div>
           <div class="ai-status" id="aiStatus"></div>
+          <div class="ai-fallback-note" id="aiFallbackNote">AI generation isn't configured on this deployment yet — you can still fill in the name, symbol, and description below by hand.</div>
         </div>
 
         <label for="tName">Token Name</label>
@@ -407,6 +468,51 @@
               <button class="btn btn-grad" style="width:100%; padding:15px;" id="addLiqBtn">Create pool &amp; add liquidity</button>
             </div>
           </div>
+
+          <div class="manage-section" id="manageSection" style="display:none;">
+            <div class="manage-head">
+              <h4>Manage your token</h4>
+              <span class="live-dot" id="liveDot">Live</span>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat-tile"><div class="lbl">Price (USD)</div><div class="val" id="statPrice">—</div><div class="sub" id="statPriceSol">—</div></div>
+              <div class="stat-tile"><div class="lbl">24h Change</div><div class="val" id="statChange">—</div><div class="sub">since pool creation</div></div>
+              <div class="stat-tile"><div class="lbl">Liquidity (USD)</div><div class="val" id="statLiq">—</div><div class="sub">in the Raydium pool</div></div>
+              <div class="stat-tile"><div class="lbl">Your balance</div><div class="val" id="statBalance">—</div><div class="sub" id="statBalanceUsd">—</div></div>
+            </div>
+
+            <div class="chart-frame" id="chartFrame">
+              <div class="chart-empty" id="chartEmpty">
+                <div class="big">📈</div>
+                <div class="t1">Chart isn't live yet</div>
+                <div class="t2" id="chartEmptyText">Create a Raydium pool above — once it's on-chain, price data usually takes a few minutes to appear here.</div>
+              </div>
+              <iframe id="chartIframe" style="display:none;" loading="lazy"></iframe>
+            </div>
+
+            <div class="sell-card">
+              <h5>Sell tokens</h5>
+              <p class="desc">Routes through Jupiter, Solana's aggregator — you approve the exact swap in your wallet, nothing is sold automatically.</p>
+              <div class="balance-line">Available: <b id="sellAvailable">0</b> <span id="sellSymbolLabel">tokens</span></div>
+              <div class="pct-row">
+                <button type="button" class="pct-btn" data-pct="25">25%</button>
+                <button type="button" class="pct-btn" data-pct="50">50%</button>
+                <button type="button" class="pct-btn" data-pct="75">75%</button>
+                <button type="button" class="pct-btn" data-pct="100">Max</button>
+              </div>
+              <div class="sell-row">
+                <input type="number" id="sellAmount" placeholder="Amount of tokens to sell" min="0" step="any">
+                <button type="button" class="btn btn-ghost" id="sellQuoteBtn" style="white-space:nowrap;">Get quote</button>
+              </div>
+              <div class="quote-box" id="sellQuoteBox">
+                <div><div class="k">You'll receive (est.)</div><div class="v" id="sellQuoteOut">—</div></div>
+                <div style="text-align:right;"><div class="k">Price impact</div><div class="v" id="sellQuoteImpact" style="font-size:13px;">—</div></div>
+              </div>
+              <button type="button" class="btn btn-danger" style="width:100%; padding:14px;" id="sellNowBtn" disabled>Get a quote first</button>
+              <div class="console" id="sellLog" aria-live="polite"></div>
+            </div>
+          </div>
         </div>
 
         <div class="step-actions">
@@ -443,7 +549,10 @@
   <div class="wrap">
     Launch Console mints real SPL tokens on Solana. It does not, and will not, simulate trading activity, fake
     volume, or provide a way to freeze or drain holder funds after launch. Deploying is a real, irreversible,
-    on-chain action once confirmed on mainnet.
+    on-chain action once confirmed on mainnet. Post-launch price and liquidity stats come straight from
+    <a href="https://dexscreener.com" target="_blank" rel="noopener">DexScreener's</a> public API, and selling
+    routes through <a href="https://jup.ag" target="_blank" rel="noopener">Jupiter</a> — every number on this page
+    reflects real on-chain state, and every sell requires your explicit wallet approval.
     <br><br>
     Built with <a href="https://solana.com" target="_blank" rel="noopener">Solana web3.js</a> and the
     <a href="https://spl.solana.com/token" target="_blank" rel="noopener">SPL Token program</a>.
@@ -471,6 +580,11 @@ let walletPubkey = null;
 let currentStep = 1;
 let deployedMint = null;
 let deployedDecimals = null;
+let deployedSymbol = null;
+let deployedPoolId = null;
+const SOL_MINT = "So11111111111111111111111111111111111111112";
+let dashboardTimer = null;
+let lastQuote = null; // { outAmount, inAmount, priceImpactPct, rawQuote }
 
 // ---- Fee wallet QR code ----
 const $qrImg = document.getElementById('qrImg');
@@ -702,6 +816,7 @@ deployBtn.onclick = async () => {
     const mintAddr = mintKeypair.publicKey.toBase58();
     deployedMint = mintAddr;
     deployedDecimals = decimals;
+    deployedSymbol = symbol;
     $('resultMint').textContent = mintAddr;
     $('resultLinks').innerHTML = `
       <a href="https://solscan.io/token/${mintAddr}${network==='devnet' ? '?cluster=devnet':''}" target="_blank" rel="noopener">View on Solscan</a>
@@ -710,6 +825,7 @@ deployBtn.onclick = async () => {
     `;
     $('resultBox').classList.add('show');
     deployBtn.textContent = 'Deployed ✓';
+    initManageDashboard();
 
     if(wantsLiquidity){
       logConsole('Continuing straight into adding initial liquidity…', 'ok');
@@ -728,12 +844,30 @@ deployBtn.onclick = async () => {
 };
 
 /* ============ AI: name + icon generation ============ */
-function setAiStatus(msg, cls){ const el = $('aiStatus'); el.textContent = msg || ''; el.className = 'ai-status' + (cls ? ' ' + cls : ''); }
+function setAiStatus(msg, cls){
+  const el = $('aiStatus'); el.textContent = msg || ''; el.className = 'ai-status' + (cls ? ' ' + cls : '');
+  const isKeyMissing = cls === 'err' && /missing (ANTHROPIC|OPENAI)_API_KEY/i.test(msg || '');
+  $('aiFallbackNote').classList.toggle('show', isKeyMissing);
+}
 function setAiBusy(busy){ $('aiNameBtn').disabled = busy; $('aiImageBtn').disabled = busy; }
 function applyAiIcon(dataUrl){
   $('dzInner').innerHTML = `<img src="${dataUrl}" alt="Token icon preview"><div class="main-txt">AI-generated icon</div><div class="sub-txt">Click to replace</div>`;
   $('pvIcon').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
 }
+
+// Check upfront whether AI is even configured, so the fallback note shows
+// immediately instead of only after someone clicks and hits an error.
+(async () => {
+  try{
+    const r = await fetch('/api/ai/status');
+    const s = await r.json();
+    if(!s.name && !s.image){
+      $('aiFallbackNote').classList.add('show');
+      $('aiNameBtn').title = 'AI generation is not configured on this deployment.';
+      $('aiImageBtn').title = 'AI generation is not configured on this deployment.';
+    }
+  }catch(err){ /* status check is best-effort — buttons still work normally if this fails */ }
+})();
 
 $('aiNameBtn').addEventListener('click', async () => {
   const prompt = $('aiPrompt').value.trim();
@@ -848,6 +982,8 @@ async function createLiquidityPool(tokenAmt, solAmt){
     <a href="https://solscan.io/tx/${txId}${network==='devnet' ? '?cluster=devnet':''}" target="_blank" rel="noopener">View transaction</a>
   `;
   $('liqResultBox').classList.add('show');
+  deployedPoolId = poolId;
+  refreshDashboardStats();
 }
 
 // Auto-run right after deploy, using the amounts entered in Step 3.
@@ -891,6 +1027,182 @@ addLiqBtn.addEventListener('click', async () => {
     console.error(err);
     liqLog('Failed: ' + (err.message || err), 'err', true);
     addLiqBtn.disabled = false; addLiqBtn.textContent = 'Create pool & add liquidity';
+  }
+});
+
+/* ============ Manage dashboard: chart, live stats, sell ============ */
+function initManageDashboard(){
+  $('manageSection').style.display = 'block';
+  $('sellSymbolLabel').textContent = deployedSymbol ? '$' + deployedSymbol : 'tokens';
+  refreshDashboardStats();
+  refreshWalletBalance();
+  if(dashboardTimer) clearInterval(dashboardTimer);
+  dashboardTimer = setInterval(() => { refreshDashboardStats(); refreshWalletBalance(); }, 20000);
+}
+
+async function refreshWalletBalance(){
+  if(!deployedMint || !walletPubkey) return;
+  try{
+    const ata = await getAssociatedTokenAddress(new web3.PublicKey(deployedMint), walletPubkey);
+    const bal = await connection.getTokenAccountBalance(ata).catch(() => null);
+    const amt = bal ? Number(bal.value.uiAmountString || 0) : 0;
+    $('statBalance').textContent = amt.toLocaleString(undefined, {maximumFractionDigits:2});
+    $('sellAvailable').textContent = amt.toLocaleString(undefined, {maximumFractionDigits:4});
+    return amt;
+  }catch(err){
+    $('statBalance').textContent = '0';
+    return 0;
+  }
+}
+
+// Pulls real, unfaked market data from DexScreener's public API — no key
+// required. If the pool hasn't indexed yet this just quietly no-ops and the
+// chart panel shows the "not live yet" empty state.
+async function refreshDashboardStats(){
+  if(!deployedMint) return;
+  try{
+    const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${deployedMint}`);
+    const data = await r.json();
+    const pair = (data && data.pairs && data.pairs.length)
+      ? data.pairs.sort((a,b) => (b.liquidity?.usd||0) - (a.liquidity?.usd||0))[0]
+      : null;
+
+    if(pair){
+      $('statPrice').textContent = '$' + Number(pair.priceUsd || 0).toLocaleString(undefined, {maximumFractionDigits: 8});
+      $('statPriceSol').textContent = (pair.priceNative ? Number(pair.priceNative).toLocaleString(undefined,{maximumFractionDigits:10}) : '—') + ' SOL';
+      const chg = pair.priceChange?.h24;
+      if(typeof chg === 'number'){
+        $('statChange').textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+        $('statChange').className = 'val ' + (chg >= 0 ? 'up' : 'down');
+      }
+      $('statLiq').textContent = pair.liquidity?.usd ? '$' + Number(pair.liquidity.usd).toLocaleString(undefined,{maximumFractionDigits:0}) : '—';
+
+      if(!deployedPoolId) deployedPoolId = pair.pairAddress;
+      const frame = $('chartIframe');
+      if(frame.style.display === 'none'){
+        frame.src = `https://dexscreener.com/solana/${pair.pairAddress}?embed=1&theme=dark&trades=0&info=0`;
+        frame.style.display = 'block';
+        $('chartEmpty').style.display = 'none';
+      }
+      $('liveDot').style.display = 'inline-flex';
+    } else if(deployedPoolId){
+      $('chartEmptyText').textContent = 'Pool created — waiting for DexScreener to index it. This is usually quick, sometimes a few minutes.';
+    }
+
+    const bal = Number(document.getElementById('sellAvailable').textContent.replace(/,/g,'')) || 0;
+    if(pair && pair.priceUsd){
+      $('statBalanceUsd').textContent = '≈ $' + (bal * Number(pair.priceUsd)).toLocaleString(undefined,{maximumFractionDigits:2});
+    }
+  }catch(err){
+    console.error('Dashboard stats fetch failed:', err);
+  }
+}
+
+function sellLog(msg, cls, show){
+  const box = $('sellLog');
+  if(show) box.classList.add('show');
+  const div = document.createElement('div');
+  div.className = cls || ''; div.textContent = '› ' + msg;
+  box.appendChild(div); box.scrollTop = box.scrollHeight;
+}
+
+document.querySelectorAll('.pct-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    document.querySelectorAll('.pct-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    const bal = await refreshWalletBalance();
+    const pct = Number(btn.dataset.pct) / 100;
+    $('sellAmount').value = pct === 1 ? bal : +(bal * pct).toFixed(6);
+    $('sellQuoteBox').classList.remove('show');
+    $('sellNowBtn').disabled = true; $('sellNowBtn').textContent = 'Get a quote first';
+    lastQuote = null;
+  });
+});
+$('sellAmount').addEventListener('input', () => {
+  document.querySelectorAll('.pct-btn').forEach(b => b.classList.remove('sel'));
+  $('sellQuoteBox').classList.remove('show');
+  $('sellNowBtn').disabled = true; $('sellNowBtn').textContent = 'Get a quote first';
+  lastQuote = null;
+});
+
+// Jupiter is Solana's standard swap aggregator — this fetches a real,
+// live quote for selling the token back to SOL. Nothing here executes
+// until the user explicitly approves the swap transaction in their wallet.
+$('sellQuoteBtn').addEventListener('click', async () => {
+  const amt = parseFloat($('sellAmount').value);
+  if(!deployedMint){ sellLog('Deploy a token first.', 'err', true); return; }
+  if(!amt || amt <= 0){ sellLog('Enter an amount greater than 0.', 'err', true); return; }
+
+  $('sellQuoteBtn').disabled = true; $('sellQuoteBtn').textContent = 'Quoting…';
+  sellLog('Fetching a live quote from Jupiter…', null, true);
+  try{
+    const rawAmount = BigInt(Math.round(amt * 10 ** deployedDecimals)).toString();
+    const url = `https://quote-api.jup.ag/v6/quote?inputMint=${deployedMint}&outputMint=${SOL_MINT}&amount=${rawAmount}&slippageBps=100`;
+    const r = await fetch(url);
+    const q = await r.json();
+    if(!r.ok || q.error) throw new Error(q.error || 'No swap route found yet — this token likely has no liquidity pool.');
+
+    const solOut = Number(q.outAmount) / web3.LAMPORTS_PER_SOL;
+    $('sellQuoteOut').textContent = solOut.toLocaleString(undefined,{maximumFractionDigits:6}) + ' SOL';
+    $('sellQuoteImpact').textContent = (Number(q.priceImpactPct) * 100).toFixed(2) + '%';
+    $('sellQuoteBox').classList.add('show');
+    lastQuote = q;
+    $('sellNowBtn').disabled = false; $('sellNowBtn').textContent = `Sell ${amt.toLocaleString()} ${deployedSymbol ? '$'+deployedSymbol : 'tokens'}`;
+    sellLog('Quote ready — review it, then confirm the sell.', 'ok');
+  }catch(err){
+    sellLog(err.message || String(err), 'err');
+    lastQuote = null;
+  }finally{
+    $('sellQuoteBtn').disabled = false; $('sellQuoteBtn').textContent = 'Get quote';
+  }
+});
+
+$('sellNowBtn').addEventListener('click', async () => {
+  if(!lastQuote){ sellLog('Get a quote first.', 'err', true); return; }
+  if(!walletPubkey){ sellLog('Connect your wallet first.', 'err', true); return; }
+
+  const btn = $('sellNowBtn');
+  btn.disabled = true; btn.textContent = 'Working…';
+  sellLog('Building the swap transaction…', null, true);
+  try{
+    const swapResp = await fetch('https://quote-api.jup.ag/v6/swap', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        quoteResponse: lastQuote,
+        userPublicKey: walletPubkey.toBase58(),
+        wrapAndUnwrapSol: true,
+        dynamicComputeUnitLimit: true,
+        prioritizationFeeLamports: 'auto',
+      }),
+    });
+    const swapData = await swapResp.json();
+    if(!swapResp.ok || !swapData.swapTransaction) throw new Error(swapData.error || 'Could not build the swap transaction.');
+
+    sellLog('Approve the swap in your wallet…');
+    const txBuf = Uint8Array.from(atob(swapData.swapTransaction), c => c.charCodeAt(0));
+    const vtx = web3.VersionedTransaction.deserialize(txBuf);
+    const signedVtx = await window.solana.signTransaction(vtx);
+    const rawTx = signedVtx.serialize();
+
+    const sig = await connection.sendRawTransaction(rawTx, { skipPreflight: true, maxRetries: 3 });
+    sellLog('Submitted: ' + sig.slice(0,12) + '… confirming…');
+    const bh = await connection.getLatestBlockhash();
+    await connection.confirmTransaction({ signature: sig, ...bh }, 'confirmed');
+
+    sellLog('Sold ✓ — view it on Solscan.', 'ok');
+    sellLog(`https://solscan.io/tx/${sig}`, 'ok');
+    $('sellAmount').value = '';
+    $('sellQuoteBox').classList.remove('show');
+    lastQuote = null;
+    btn.textContent = 'Sold ✓';
+    await refreshWalletBalance();
+    await refreshDashboardStats();
+    setTimeout(() => { btn.textContent = 'Get a quote first'; btn.disabled = true; }, 2500);
+  }catch(err){
+    console.error(err);
+    sellLog('Failed: ' + (err.message || err), 'err');
+    btn.disabled = false; btn.textContent = 'Try again';
   }
 });
 </script>

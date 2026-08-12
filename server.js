@@ -12,6 +12,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+// Lets the frontend know upfront whether AI features are configured, so it
+// can show the manual-entry fallback note instead of only failing after a click.
+app.get('/api/ai/status', (req, res) => {
+  res.json({ name: Boolean(ANTHROPIC_API_KEY), image: Boolean(OPENAI_API_KEY) });
+});
+
 // ---- AI: generate a token name, symbol, and description ----
 app.post('/api/ai/name', async (req, res) => {
   if (!ANTHROPIC_API_KEY) {
