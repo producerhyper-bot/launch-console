@@ -4,9 +4,9 @@ A single-page Solana SPL token deployer. Static frontend (`public/index.html`) s
 
 ## Before you deploy anywhere
 
-`PLATFORM_WALLET_ADDRESS` near the top of the `<script>` block in `public/index.html` is already set to your fee wallet. Fee payments get sent there, and the Review step also shows a QR code + copyable address for anyone who wants to pay manually. If you ever need to change wallets, edit that constant.
+`PLATFORM_WALLET_ADDRESS` near the top of the `<script>` block in `public/index.html` is already set to your fee wallet (`HQ7Fp1W1AjkBF5j6pQMKHfTPRUZxqVr72cPNs5cYDz3D`). Fee payments get sent there, and the Review step also shows a QR code + copyable address for anyone who wants to pay manually. If you ever need to change wallets, edit that constant.
 
-It also defaults to **devnet** (fake SOL, safe for testing). Switch the toggle to mainnet in the UI only once you've tested the full flow end to end — mainnet transactions are real and irreversible.
+It also defaults to **devnet** (fake SOL, safe for testing) — there's now an actual Devnet / Mainnet toggle near the top of the page (it drives the RPC endpoint, the banner, the Review step, and the Raydium program IDs all at once). Only switch it to mainnet once you've tested the full flow end to end — mainnet transactions are real and irreversible.
 
 ## 1. Push to GitHub
 
