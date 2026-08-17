@@ -1,8 +1,8 @@
 {
   "name": "launch-console",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Solana SPL token launch console",
+  "description": "Solana SPL token launch console (Mainnet)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -11,6 +11,9 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "compression": "^1.7.4",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0"
   }
 }

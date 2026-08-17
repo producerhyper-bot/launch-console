@@ -202,19 +202,28 @@
   .liq-section .desc{color:var(--muted); font-size:12.5px; margin-bottom:16px;}
   .liq-section .hint{margin-top:-10px;}
 
+  /* ---- Visitor badge ---- */
+  .visitor-badge{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--muted); background:rgba(255,255,255,0.03); border:1px solid var(--glass-brd); padding:8px 14px; border-radius:99px; margin:0 0 22px;}
+  .visitor-badge b{color:var(--text); font-family:var(--mono);}
+  .visitor-badge .live-dot-mini{width:6px; height:6px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 0 rgba(53,227,154,0.6); animation:pulse-dot 1.8s infinite; flex-shrink:0;}
+
   /* ---- Trust strip ---- */
   .trust-strip{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:26px 0 6px;}
   .trust-item{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600; color:var(--muted); background:rgba(255,255,255,0.03); border:1px solid var(--glass-brd); padding:8px 14px; border-radius:99px;}
   .trust-item svg{flex-shrink:0;}
   @media (max-width:720px){ .trust-strip{gap:8px;} .trust-item{font-size:11.5px; padding:7px 11px;} }
 
-  /* ---- Network toggle ---- */
-  .net-toggle{display:inline-flex; gap:3px; padding:3px; border-radius:99px; background:rgba(255,255,255,0.04); border:1px solid var(--glass-brd); margin-bottom:18px;}
-  .net-opt{font-family:var(--body); font-weight:600; font-size:12.5px; padding:8px 16px; border-radius:99px; border:none; background:transparent; color:var(--muted); cursor:pointer; transition:all .15s;}
-  .net-opt.active[data-net="devnet"]{background:rgba(53,227,154,0.16); color:var(--ok);}
-  .net-opt.active[data-net="mainnet-beta"]{background:linear-gradient(90deg, var(--cyan), var(--violet)); color:#08090d;}
-  .banner{transition:background .2s;}
-  .banner.devnet{background:linear-gradient(90deg, var(--ok), var(--cyan)); color:#06110c;}
+  /* ---- Wallet status ---- */
+  .wallet-info{display:flex; align-items:center; gap:10px;}
+  .wallet-balance{font-family:var(--mono); font-size:12.5px; color:var(--muted); background:rgba(255,255,255,0.04); border:1px solid var(--glass-brd); padding:8px 12px; border-radius:9px; display:none;}
+  .wallet-balance.show{display:inline-block;}
+  #disconnectBtn{display:none; font-family:var(--body); font-weight:600; font-size:12px; padding:8px 10px; background:transparent; border:1px solid var(--glass-brd); color:var(--muted); border-radius:9px; cursor:pointer;}
+  #disconnectBtn.show{display:inline-block;}
+  #disconnectBtn:hover{border-color:var(--danger); color:var(--danger);}
+
+  .field-err{border-color:var(--danger) !important; background:rgba(255,93,122,0.06) !important;}
+  .field-err-msg{font-size:11.5px; color:var(--danger); margin-top:-14px; margin-bottom:16px; display:none;}
+  .field-err-msg.show{display:block;}
 
   /* ---- Pricing strip ---- */
   .pricing-strip{max-width:760px; margin:30px auto 0; background:var(--glass); border:1px solid var(--glass-brd); border-radius:16px; padding:20px 24px; backdrop-filter:blur(16px);}
@@ -291,13 +300,17 @@
 </head>
 <body>
 
-<div class="banner devnet" id="netBanner">Currently on Solana Devnet — test SOL only, nothing here is real or costs money.</div>
+<div class="banner" id="netBanner">Live on Solana Mainnet — every deploy here is real and irreversible.</div>
 
 <header>
   <div class="nav">
     <div class="brand"><span class="mark">◆</span> Launch Console</div>
     <div class="navlinks"><a href="#build">Create Token</a></div>
-    <button id="walletBtn">Connect Wallet</button>
+    <div class="wallet-info">
+      <span class="wallet-balance" id="walletBalance"></span>
+      <button id="disconnectBtn" title="Disconnect wallet">Disconnect</button>
+      <button id="walletBtn">Connect Wallet</button>
+    </div>
   </div>
 </header>
 
@@ -307,9 +320,9 @@
     <h1>Create your <span class="grad">SPL token</span><br>in three steps</h1>
     <p class="sub">Configure it, review the real cost, sign once. Nothing on this page fakes activity that isn't actually happening on-chain.</p>
 
-    <div class="net-toggle" id="netToggle" role="group" aria-label="Network">
-      <button type="button" class="net-opt active" data-net="devnet">Devnet — test</button>
-      <button type="button" class="net-opt" data-net="mainnet-beta">Mainnet — live</button>
+    <div class="visitor-badge" id="visitorBadge" style="display:none;">
+      <span class="live-dot-mini"></span>
+      <span><b id="visitorCount">—</b> people have used Launch Console</span>
     </div>
 
     <div class="trust-strip">
@@ -363,11 +376,13 @@
 
         <label for="tName">Token Name</label>
         <input type="text" id="tName" placeholder="e.g. Drill Sergeant" maxlength="32">
+        <div class="field-err-msg" id="err-tName">Give your token a name.</div>
 
         <div class="grid2">
           <div>
             <label for="tSymbol">Symbol</label>
             <input type="text" id="tSymbol" placeholder="DRILL" maxlength="10" style="text-transform:uppercase;">
+            <div class="field-err-msg" id="err-tSymbol">Enter a 1–10 character symbol.</div>
           </div>
           <div>
             <label for="tDecimals">Decimals</label>
@@ -377,6 +392,7 @@
 
         <label for="tSupply">Total Supply</label>
         <input type="number" id="tSupply" placeholder="1000000000" min="1">
+        <div class="field-err-msg" id="err-tSupply">Enter a total supply greater than 0.</div>
 
         <label for="tDesc">Description</label>
         <textarea id="tDesc" placeholder="What is this token about?"></textarea>
@@ -394,7 +410,7 @@
 
         <div class="step-actions">
           <button class="btn btn-ghost" disabled>Previous</button>
-          <button class="btn btn-grad" onclick="goStep(2)">Next</button>
+          <button class="btn btn-grad" onclick="tryGoStep2()">Next</button>
         </div>
       </div>
 
@@ -402,7 +418,7 @@
         <h2>Advanced Settings</h2>
         <p class="desc">Every toggle here changes a real on-chain authority — not cosmetic.</p>
 
-        <div class="net-warn show" id="netWarnText">✓ This deploys to Solana Devnet — test SOL only, safe to experiment.</div>
+        <div class="net-warn show" id="netWarnText">⚠ This deploys to Solana Mainnet — real SOL, real and irreversible.</div>
 
         <label style="margin-top:8px;">Security Features</label>
         <label class="feat" id="item-revokeMint">
@@ -479,7 +495,7 @@
         <div class="review-row"><span class="k">Symbol</span><span class="v" id="rvSymbol">—</span></div>
         <div class="review-row"><span class="k">Supply</span><span class="v" id="rvSupply">—</span></div>
         <div class="review-row"><span class="k">Decimals</span><span class="v" id="rvDecimals">—</span></div>
-        <div class="review-row"><span class="k">Network</span><span class="v" id="rvNetwork">devnet</span></div>
+        <div class="review-row"><span class="k">Network</span><span class="v" id="rvNetwork">Solana Mainnet</span></div>
         <div class="review-row"><span class="k">Security features</span><span class="v" id="rvFeatures">none</span></div>
         <div class="review-row"><span class="k">Initial liquidity</span><span class="v" id="rvLiquidity">skipped</span></div>
 
@@ -510,6 +526,7 @@
           <h3>✓ Token deployed</h3>
           <div class="addr" id="resultMint"></div>
           <div class="result-links" id="resultLinks"></div>
+          <button class="btn btn-ghost" id="copyMintBtn" style="padding:8px 14px; font-size:12.5px; margin-top:9px;">Copy mint address</button>
 
           <div class="liq-section" id="liqSection" style="display:none;">
             <h4 id="liqSectionTitle">Adding initial liquidity…</h4>
@@ -622,8 +639,8 @@
     <div class="faq-body">No such function exists in this app, and it isn't planned. By default a newly minted SPL token's mint and freeze authorities sit with your connected wallet, same as any token you'd create yourself — the platform never holds them. The optional "Revoke" toggles let you permanently give those authorities up on-chain if you want holders to be able to verify that.</div>
   </details>
   <details class="faq-item">
-    <summary>What's the difference between Devnet and Mainnet?</summary>
-    <div class="faq-body">Devnet is Solana's public test network — tokens and SOL there aren't real and cost nothing, so it's the safe place to try the full flow first. Mainnet is the live network: deploying there spends real SOL and creates a real, irreversible on-chain token. Use the toggle near the top of this page to switch, and double-check which one is selected before you sign.</div>
+    <summary>Is this real money?</summary>
+    <div class="faq-body">Yes. This console only runs on Solana Mainnet — every fee payment, mint, liquidity deposit, and sell here is a real, irreversible on-chain transaction using real SOL. There's no test mode. Double-check every amount and address before you approve a transaction in your wallet.</div>
   </details>
   <details class="faq-item">
     <summary>Where do the price and liquidity numbers on the dashboard come from?</summary>
@@ -661,16 +678,56 @@ import {
   AuthorityType, createSetAuthorityInstruction,
 } from "https://esm.sh/@solana/spl-token@0.4.9";
 
-/* ============ CONFIG — edit before going live ============ */
-const PLATFORM_WALLET_ADDRESS = "HQ7Fp1W1AjkBF5j6pQMKHfTPRUZxqVr72cPNs5cYDz3D";
+/* ============ CONFIG ============ */
+// Defaults below are only a fallback for local testing without a server.
+// For a real deployment, set PLATFORM_WALLET_ADDRESS and SOLANA_RPC_ENDPOINT
+// as environment variables on the server (see README) — the page pulls them
+// from /api/config at load time so you never have to edit this file to
+// change wallet or RPC provider.
+let PLATFORM_WALLET_ADDRESS = "HQ7Fp1W1AjkBF5j6pQMKHfTPRUZxqVr72cPNs5cYDz3D";
+let RPC_ENDPOINT = web3.clusterApiUrl("mainnet-beta");
 const BASE_FEE_SOL = 0.10;
 const FEATURE_FEES = { revokeMint: 0.05, revokeFreeze: 0.05, immutable: 0.03, social: 0.02 };
-const RPC_ENDPOINTS = { "devnet": web3.clusterApiUrl("devnet"), "mainnet-beta": web3.clusterApiUrl("mainnet-beta") };
-/* =========================================================== */
+/* =================================== */
 
-let network = "devnet";
-let connection = new web3.Connection(RPC_ENDPOINTS[network], "confirmed");
+try{
+  const cfgResp = await fetch('/api/config');
+  if(cfgResp.ok){
+    const cfg = await cfgResp.json();
+    if(cfg.platformWallet) PLATFORM_WALLET_ADDRESS = cfg.platformWallet;
+    if(cfg.rpcEndpoint) RPC_ENDPOINT = cfg.rpcEndpoint;
+  }
+}catch(err){
+  console.warn('Could not load /api/config — using built-in defaults.', err);
+}
+
+let connection = new web3.Connection(RPC_ENDPOINT, "confirmed");
 let walletPubkey = null;
+
+/* ============ Visitor counter (real, server-backed) ============ */
+// Registers this visit once per browser session, then polls the real total
+// so the number on the page updates as other people actually use the site.
+(async () => {
+  const badge = document.getElementById('visitorBadge');
+  const countEl = document.getElementById('visitorCount');
+  try {
+    const alreadyCountedThisSession = sessionStorage.getItem('lc_visit_counted');
+    const resp = await fetch('/api/visits', { method: alreadyCountedThisSession ? 'GET' : 'POST' });
+    if (resp.ok) {
+      const data = await resp.json();
+      countEl.textContent = data.visits.toLocaleString();
+      badge.style.display = 'inline-flex';
+      sessionStorage.setItem('lc_visit_counted', '1');
+    }
+  } catch (err) { /* non-critical — just leave the badge hidden if this fails */ }
+
+  setInterval(async () => {
+    try {
+      const r = await fetch('/api/visits');
+      if (r.ok) { const d = await r.json(); countEl.textContent = d.visits.toLocaleString(); }
+    } catch (err) {}
+  }, 30000);
+})();
 let currentStep = 1;
 let deployedMint = null;
 let deployedDecimals = null;
@@ -694,35 +751,14 @@ document.getElementById('copyAddrBtn')?.addEventListener('click', async (e) => {
     setTimeout(() => { e.target.textContent = 'Copy address'; }, 1500);
   }catch(err){}
 });
-
-// ---- Network toggle (Devnet / Mainnet) ----
-function updateNetworkUI(){
-  const isMain = network === 'mainnet-beta';
-  const banner = document.getElementById('netBanner');
-  banner.textContent = isMain
-    ? 'Live on Solana Mainnet — every deploy here is real and irreversible.'
-    : 'Currently on Solana Devnet — test SOL only, nothing here is real or costs money.';
-  banner.classList.toggle('devnet', !isMain);
-  const warn = document.getElementById('netWarnText');
-  if(warn){
-    warn.textContent = isMain
-      ? '⚠ This deploys to Solana Mainnet — real SOL, real and irreversible.'
-      : '✓ This deploys to Solana Devnet — test SOL only, safe to experiment.';
-  }
-  const rv = document.getElementById('rvNetwork');
-  if(rv) rv.textContent = network;
-}
-document.querySelectorAll('.net-opt').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if(btn.dataset.net === network) return;
-    network = btn.dataset.net;
-    connection = new web3.Connection(RPC_ENDPOINTS[network], "confirmed");
-    document.querySelectorAll('.net-opt').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    updateNetworkUI();
-  });
+document.getElementById('copyMintBtn')?.addEventListener('click', async (e) => {
+  if(!deployedMint) return;
+  try{
+    await navigator.clipboard.writeText(deployedMint);
+    e.target.textContent = 'Copied ✓';
+    setTimeout(() => { e.target.textContent = 'Copy mint address'; }, 1500);
+  }catch(err){}
 });
-updateNetworkUI();
 
 window.goStep = function(n){
   document.getElementById('panel-' + currentStep).classList.remove('active');
@@ -737,6 +773,32 @@ window.goStep = function(n){
 };
 
 const $ = id => document.getElementById(id);
+
+function setFieldError(id, hasError){
+  $(id).classList.toggle('field-err', hasError);
+  const msg = document.getElementById('err-' + id);
+  if(msg) msg.classList.toggle('show', hasError);
+}
+
+window.tryGoStep2 = function(){
+  const name = $('tName').value.trim();
+  const symbol = $('tSymbol').value.trim();
+  const supply = parseFloat($('tSupply').value);
+
+  const nameOk = name.length > 0;
+  const symbolOk = symbol.length > 0 && symbol.length <= 10;
+  const supplyOk = supply > 0;
+
+  setFieldError('tName', !nameOk);
+  setFieldError('tSymbol', !symbolOk);
+  setFieldError('tSupply', !supplyOk);
+
+  if(!nameOk || !symbolOk || !supplyOk) return;
+  goStep(2);
+};
+['tName','tSymbol','tSupply'].forEach(id => {
+  $(id).addEventListener('input', () => setFieldError(id, false));
+});
 function syncPreview(){
   const name = $('tName').value.trim() || 'Token Name';
   const symbol = $('tSymbol').value.trim().toUpperCase() || 'SYMBOL';
@@ -828,7 +890,6 @@ function syncReview(){
   $('rvSymbol').textContent = $('tSymbol').value.trim().toUpperCase() || '—';
   $('rvSupply').textContent = $('tSupply').value ? Number($('tSupply').value).toLocaleString() : '—';
   $('rvDecimals').textContent = $('tDecimals').value || '—';
-  $('rvNetwork').textContent = network;
   const chips = featureIds.filter(id => $('cb-' + id).checked);
   $('rvFeatures').textContent = chips.length ? chips.join(', ') : 'none';
   if($('cb-addLiquidity').checked){
@@ -840,8 +901,18 @@ function syncReview(){
   updateFee();
 }
 
-const walletBtn = $('walletBtn'), deployBtn = $('deployBtn');
-walletBtn.onclick = async () => {
+const walletBtn = $('walletBtn'), deployBtn = $('deployBtn'), disconnectBtn = $('disconnectBtn');
+
+async function refreshWalletSolBalance(){
+  if(!walletPubkey) return;
+  try{
+    const lamports = await connection.getBalance(walletPubkey);
+    $('walletBalance').textContent = (lamports / web3.LAMPORTS_PER_SOL).toLocaleString(undefined,{maximumFractionDigits:4}) + ' SOL';
+    $('walletBalance').classList.add('show');
+  }catch(err){ /* best-effort — leave last known balance visible if this fails */ }
+}
+
+async function connectWallet(){
   if(!window.solana || !window.solana.isPhantom){ window.open('https://phantom.app/', '_blank'); return; }
   try{
     const resp = await window.solana.connect();
@@ -849,8 +920,25 @@ walletBtn.onclick = async () => {
     walletBtn.textContent = walletPubkey.toBase58().slice(0,4) + '…' + walletPubkey.toBase58().slice(-4);
     deployBtn.disabled = false;
     deployBtn.textContent = 'Pay fee & deploy token';
+    disconnectBtn.classList.add('show');
+    refreshWalletSolBalance();
   }catch(err){}
+}
+walletBtn.onclick = connectWallet;
+
+disconnectBtn.onclick = async () => {
+  try{ await window.solana?.disconnect(); }catch(err){}
+  walletPubkey = null;
+  walletBtn.textContent = 'Connect Wallet';
+  deployBtn.disabled = true;
+  deployBtn.textContent = 'Connect wallet to deploy';
+  disconnectBtn.classList.remove('show');
+  $('walletBalance').classList.remove('show');
 };
+
+// Phantom fires this on its own if the user disconnects/switches from the extension UI.
+window.solana?.on?.('disconnect', () => disconnectBtn.onclick());
+window.solana?.on?.('accountChanged', (pk) => { if(pk){ connectWallet(); } else { disconnectBtn.onclick(); } });
 
 function logConsole(msg, cls, show){
   const box = $('consoleLog');
@@ -928,7 +1016,7 @@ deployBtn.onclick = async () => {
     tx.partialSign(mintKeypair);
 
     const signedTx = await window.solana.signTransaction(tx);
-    logConsole('Submitting mint transaction to ' + network + '...');
+    logConsole('Submitting mint transaction to Solana Mainnet...');
     const sig = await connection.sendRawTransaction(signedTx.serialize());
     await connection.confirmTransaction(sig, 'confirmed');
     logConsole('Mint transaction confirmed: ' + sig.slice(0,12) + '…', 'ok');
@@ -942,7 +1030,7 @@ deployBtn.onclick = async () => {
     deployedSymbol = symbol;
     $('resultMint').textContent = mintAddr;
     $('resultLinks').innerHTML = `
-      <a href="https://solscan.io/token/${mintAddr}${network==='devnet' ? '?cluster=devnet':''}" target="_blank" rel="noopener">View on Solscan</a>
+      <a href="https://solscan.io/token/${mintAddr}" target="_blank" rel="noopener">View on Solscan</a>
       <a href="https://raydium.io/liquidity/create/" target="_blank" rel="noopener">Create Raydium pool</a>
       <a href="https://birdeye.so/token/${mintAddr}" target="_blank" rel="noopener">View on Birdeye</a>
     `;
@@ -1055,10 +1143,10 @@ async function createLiquidityPool(tokenAmt, solAmt){
     import("https://esm.sh/bn.js@5.2.1"),
     import("https://esm.sh/@raydium-io/raydium-sdk-v2"),
   ]);
-  const { Raydium, CREATE_CPMM_POOL_PROGRAM, CREATE_CPMM_POOL_FEE_ACC, DEVNET_PROGRAM_ID, getCpmmPdaAmmConfigId, TxVersion } = RaydiumSDK;
+  const { Raydium, CREATE_CPMM_POOL_PROGRAM, CREATE_CPMM_POOL_FEE_ACC, TxVersion } = RaydiumSDK;
 
-  const programId = network === 'devnet' ? DEVNET_PROGRAM_ID.CREATE_CPMM_POOL_PROGRAM : CREATE_CPMM_POOL_PROGRAM;
-  const poolFeeAccount = network === 'devnet' ? DEVNET_PROGRAM_ID.CREATE_CPMM_POOL_FEE_ACC : CREATE_CPMM_POOL_FEE_ACC;
+  const programId = CREATE_CPMM_POOL_PROGRAM;
+  const poolFeeAccount = CREATE_CPMM_POOL_FEE_ACC;
 
   liqLog('Connecting to Raydium with your wallet…');
   const raydium = await Raydium.load({
@@ -1071,10 +1159,7 @@ async function createLiquidityPool(tokenAmt, solAmt){
   liqLog('Fetching token + pool-fee config…');
   const mintA = await raydium.token.getTokenInfo(deployedMint);
   const mintB = { address: 'So11111111111111111111111111111111111111112', programId: TOKEN_PROGRAM_ID.toBase58(), decimals: 9 };
-  let feeConfigs = await raydium.api.getCpmmConfigs();
-  if(network === 'devnet'){
-    feeConfigs = feeConfigs.map(c => ({ ...c, id: getCpmmPdaAmmConfigId(programId, c.index).publicKey.toBase58() }));
-  }
+  const feeConfigs = await raydium.api.getCpmmConfigs();
 
   const mintAAmount = new BN(Math.round(tokenAmt * 10 ** deployedDecimals).toString());
   const mintBAmount = new BN(Math.round(solAmt * web3.LAMPORTS_PER_SOL).toString());
@@ -1102,7 +1187,7 @@ async function createLiquidityPool(tokenAmt, solAmt){
   $('liqPoolId').textContent = poolId;
   $('liqResultLinks').innerHTML = `
     <a href="https://raydium.io/liquidity-pools/?token=${poolId}" target="_blank" rel="noopener">View pool on Raydium</a>
-    <a href="https://solscan.io/tx/${txId}${network==='devnet' ? '?cluster=devnet':''}" target="_blank" rel="noopener">View transaction</a>
+    <a href="https://solscan.io/tx/${txId}" target="_blank" rel="noopener">View transaction</a>
   `;
   $('liqResultBox').classList.add('show');
   deployedPoolId = poolId;
@@ -1160,7 +1245,7 @@ function initManageDashboard(){
   refreshDashboardStats();
   refreshWalletBalance();
   if(dashboardTimer) clearInterval(dashboardTimer);
-  dashboardTimer = setInterval(() => { refreshDashboardStats(); refreshWalletBalance(); }, 20000);
+  dashboardTimer = setInterval(() => { refreshDashboardStats(); refreshWalletBalance(); refreshWalletSolBalance(); }, 20000);
 }
 
 async function refreshWalletBalance(){
