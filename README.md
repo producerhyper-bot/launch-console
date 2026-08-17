@@ -12,7 +12,6 @@ Set these in Railway under **Settings → Variables** (or export them locally be
 | `SOLANA_RPC_ENDPOINT` | Recommended | public `api.mainnet-beta.solana.com` | The public mainnet RPC is heavily rate-limited under real traffic — use a paid provider (Helius, QuickNode, Triton, etc.) for production. |
 | `ANTHROPIC_API_KEY` | Optional | — | Enables the AI name/description generator. |
 | `OPENAI_API_KEY` | Optional | — | Enables the AI icon generator. |
-| `VISIT_SALT` | Optional | random per boot | Salt used to hash visitor IPs for the visitor counter. Set a fixed value if you want the hash to stay stable across restarts. |
 
 The frontend reads `PLATFORM_WALLET_ADDRESS` and `SOLANA_RPC_ENDPOINT` from a small `/api/config` endpoint at load time, so changing them is just a Railway variable change — no redeploy of `index.html` required.
 
@@ -58,16 +57,11 @@ Visit `http://localhost:3000`. Remember: this hits real mainnet RPC and, if you 
 - Optionally revokes mint/freeze authority — real on-chain settings, not cosmetic
 - Lets you generate a token name/description and a token icon with AI (see below)
 - Lets you create a real Raydium liquidity pool and seed it with your token + SOL right after deploying
-- Shows a real, server-backed count of people who've used the site
 - Links out to Solscan, Birdeye, and Raydium's pool page afterward
 
 It does **not** simulate trading activity, generate fake volume, provide any way to freeze/drain holder funds after the fact, or show a fabricated usage counter. None of that is in this codebase, and none of it will be added — those are the things that turn a legitimate deploy tool into a rug-pull kit, and this one is meant to stay legitimate.
 
 If you (the deployer) hold a project's LP tokens because you funded the pool, you already control that liquidity through Raydium's own interface — nothing in this app needs to add a special "drain" button for that, and it deliberately doesn't.
-
-## Visitor counter
-
-The badge in the hero shows a real count of people who've loaded the page, backed by `server.js` and persisted to `data/stats.json`. It's deduped so one visitor refreshing repeatedly only counts once per day (via a salted, one-way hash of their IP — no raw IPs are stored). On Railway's default ephemeral filesystem this file resets on redeploy; attach a persistent volume or swap it for a real database if you want the count to survive deploys long-term.
 
 ## AI name & icon generation
 

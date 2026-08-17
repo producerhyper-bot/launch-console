@@ -1,7 +1,5 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
-const crypto = require('crypto');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
@@ -29,50 +27,6 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const PLATFORM_WALLET_ADDRESS = process.env.PLATFORM_WALLET_ADDRESS || 'HQ7Fp1W1AjkBF5j6pQMKHfTPRUZxqVr72cPNs5cYDz3D';
 const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_ENDPOINT || 'https://api.mainnet-beta.solana.com';
-
-// ---- Real visitor counter ----
-// Counts actual page loads, deduped to one per visitor per day by a salted,
-// one-way hash of their IP (so no raw IPs are ever stored). Persisted to disk
-// so the count survives restarts. This is a real number, not a display trick —
-// it starts at whatever is actually in stats.json (0 on a fresh deploy) and
-// only goes up when a real browser hits the page.
-// Note: on Railway's default ephemeral filesystem this resets on redeploy —
-// attach a persistent volume (or swap this for a database) if you want the
-// count to survive deploys long-term.
-const STATS_FILE = path.join(__dirname, 'data', 'stats.json');
-const VISIT_SALT = process.env.VISIT_SALT || crypto.randomBytes(16).toString('hex');
-const seenToday = new Map(); // ip-hash -> 'YYYY-MM-DD', cleared lazily below
-
-function loadStats() {
-  try { return JSON.parse(fs.readFileSync(STATS_FILE, 'utf8')); }
-  catch (err) { return { visits: 0 }; }
-}
-function saveStats(stats) {
-  try {
-    fs.mkdirSync(path.dirname(STATS_FILE), { recursive: true });
-    fs.writeFileSync(STATS_FILE, JSON.stringify(stats));
-  } catch (err) {
-    console.error('Could not persist visit stats:', err);
-  }
-}
-let stats = loadStats();
-function todayStr() { return new Date().toISOString().slice(0, 10); }
-function hashIp(ip) { return crypto.createHash('sha256').update(VISIT_SALT + ip).digest('hex'); }
-
-app.get('/api/visits', (req, res) => res.json({ visits: stats.visits }));
-
-// One real increment per unique visitor per day — a page refresh or repeat
-// tab doesn't inflate it, and neither does calling this endpoint directly.
-app.post('/api/visits', (req, res) => {
-  const h = hashIp(req.ip || 'unknown');
-  const today = todayStr();
-  if (seenToday.get(h) !== today) {
-    seenToday.set(h, today);
-    stats.visits += 1;
-    saveStats(stats);
-  }
-  res.json({ visits: stats.visits });
-});
 
 app.get('/healthz', (req, res) => res.json({ ok: true }));
 

@@ -202,11 +202,6 @@
   .liq-section .desc{color:var(--muted); font-size:12.5px; margin-bottom:16px;}
   .liq-section .hint{margin-top:-10px;}
 
-  /* ---- Visitor badge ---- */
-  .visitor-badge{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:var(--muted); background:rgba(255,255,255,0.03); border:1px solid var(--glass-brd); padding:8px 14px; border-radius:99px; margin:0 0 22px;}
-  .visitor-badge b{color:var(--text); font-family:var(--mono);}
-  .visitor-badge .live-dot-mini{width:6px; height:6px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 0 rgba(53,227,154,0.6); animation:pulse-dot 1.8s infinite; flex-shrink:0;}
-
   /* ---- Trust strip ---- */
   .trust-strip{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:26px 0 6px;}
   .trust-item{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600; color:var(--muted); background:rgba(255,255,255,0.03); border:1px solid var(--glass-brd); padding:8px 14px; border-radius:99px;}
@@ -319,11 +314,6 @@
     <div class="eyebrow">● Live on Solana</div>
     <h1>Create your <span class="grad">SPL token</span><br>in three steps</h1>
     <p class="sub">Configure it, review the real cost, sign once. Nothing on this page fakes activity that isn't actually happening on-chain.</p>
-
-    <div class="visitor-badge" id="visitorBadge" style="display:none;">
-      <span class="live-dot-mini"></span>
-      <span><b id="visitorCount">—</b> people have used Launch Console</span>
-    </div>
 
     <div class="trust-strip">
       <span class="trust-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" stroke="#35e39a" stroke-width="2" stroke-linejoin="round"/></svg> Self-custody — you sign every transaction</span>
@@ -703,31 +693,6 @@ try{
 
 let connection = new web3.Connection(RPC_ENDPOINT, "confirmed");
 let walletPubkey = null;
-
-/* ============ Visitor counter (real, server-backed) ============ */
-// Registers this visit once per browser session, then polls the real total
-// so the number on the page updates as other people actually use the site.
-(async () => {
-  const badge = document.getElementById('visitorBadge');
-  const countEl = document.getElementById('visitorCount');
-  try {
-    const alreadyCountedThisSession = sessionStorage.getItem('lc_visit_counted');
-    const resp = await fetch('/api/visits', { method: alreadyCountedThisSession ? 'GET' : 'POST' });
-    if (resp.ok) {
-      const data = await resp.json();
-      countEl.textContent = data.visits.toLocaleString();
-      badge.style.display = 'inline-flex';
-      sessionStorage.setItem('lc_visit_counted', '1');
-    }
-  } catch (err) { /* non-critical — just leave the badge hidden if this fails */ }
-
-  setInterval(async () => {
-    try {
-      const r = await fetch('/api/visits');
-      if (r.ok) { const d = await r.json(); countEl.textContent = d.visits.toLocaleString(); }
-    } catch (err) {}
-  }, 30000);
-})();
 let currentStep = 1;
 let deployedMint = null;
 let deployedDecimals = null;
