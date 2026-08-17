@@ -693,6 +693,17 @@ try{
 
 let connection = new web3.Connection(RPC_ENDPOINT, "confirmed");
 let walletPubkey = null;
+
+// Wallet security scanners (Phantom uses Blowfish) treat the older
+// signTransaction()+sendRawTransaction() pattern as a phishing red flag,
+// since that's also how a malicious dapp would tamper with a transaction
+// after the user approved it. Phantom's own recommended pattern is
+// signAndSendTransaction(), which signs and submits in one wallet-controlled
+// step — use it everywhere instead.
+async function signAndSendTx(tx){
+  const { signature } = await window.solana.signAndSendTransaction(tx);
+  return signature;
+}
 let currentStep = 1;
 let deployedMint = null;
 let deployedDecimals = null;
@@ -950,8 +961,7 @@ deployBtn.onclick = async () => {
     );
     feeTx.feePayer = walletPubkey;
     feeTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    const signedFeeTx = await window.solana.signTransaction(feeTx);
-    const feeSig = await connection.sendRawTransaction(signedFeeTx.serialize());
+    const feeSig = await signAndSendTx(feeTx);
     await connection.confirmTransaction(feeSig, 'confirmed');
     logConsole('Fee payment confirmed: ' + feeSig.slice(0,12) + '…', 'ok');
 
@@ -980,9 +990,8 @@ deployBtn.onclick = async () => {
     tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     tx.partialSign(mintKeypair);
 
-    const signedTx = await window.solana.signTransaction(tx);
     logConsole('Submitting mint transaction to Solana Mainnet...');
-    const sig = await connection.sendRawTransaction(signedTx.serialize());
+    const sig = await signAndSendTx(tx);
     await connection.confirmTransaction(sig, 'confirmed');
     logConsole('Mint transaction confirmed: ' + sig.slice(0,12) + '…', 'ok');
     if($('cb-revokeMint').checked) logConsole('Mint authority revoked.', 'ok');
@@ -1355,10 +1364,7 @@ $('sellNowBtn').addEventListener('click', async () => {
     sellLog('Approve the swap in your wallet…');
     const txBuf = Uint8Array.from(atob(swapData.swapTransaction), c => c.charCodeAt(0));
     const vtx = web3.VersionedTransaction.deserialize(txBuf);
-    const signedVtx = await window.solana.signTransaction(vtx);
-    const rawTx = signedVtx.serialize();
-
-    const sig = await connection.sendRawTransaction(rawTx, { skipPreflight: true, maxRetries: 3 });
+    const { signature: sig } = await window.solana.signAndSendTransaction(vtx, { skipPreflight: true, maxRetries: 3 });
     sellLog('Submitted: ' + sig.slice(0,12) + '… confirming…');
     const bh = await connection.getLatestBlockhash();
     await connection.confirmTransaction({ signature: sig, ...bh }, 'confirmed');
